@@ -16,6 +16,7 @@ public class Match {
     Set<String> team1Players;
     Set<String> team2Players;
     ArrayList<Event> events;
+    int playersParsed;
 
     public Match(Set<String> team1Players, Set<String> team2Players, Timestamp startTime, Timestamp endTime, int winner) {
         this.matchID = null;
@@ -25,6 +26,7 @@ public class Match {
         this.endTime = endTime;
         this.winner = winner;
         this.events = new ArrayList<Event>();
+        this.playersParsed = 0;
     }
 
     public void addEvent(Event e){

@@ -12,11 +12,36 @@ import java.net.*;
 import java.io.*;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.Scanner;
 
 public class APIInterface {
 
-    public static String getHTML(String urlToRead) {
+    public int matchesToParse;
+    public int matchesParsed;
+    public boolean matchParseInterrupt;
+    public int playersParsed;
+    public int threadCount;
+    public int APIresponses;
 
+    public APIInterface() {
+        this.matchesParsed = 0;
+        this.matchesToParse = 0;
+        this.playersParsed = 0;
+        this.threadCount = 0;
+        this.APIresponses = 0;
+    }
+
+    public ArrayList<Match> getMatches(int offset, int limit) {
+        String URL = String.format(
+                "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
+                offset);
+        String rawJSON = getHTML(URL);
+        ArrayList<Match> matchList = parseMatches(rawJSON);
+        return matchList;
+    }
+
+    public String getHTML(String urlToRead) {
         try {
             StringBuilder result = new StringBuilder();
             URL url = new URL(urlToRead);
@@ -28,14 +53,32 @@ public class APIInterface {
                 result.append(line);
             }
             rd.close();
+            this.APIresponses++;
             return result.toString();
         } catch (Exception e) {
-            System.out.print("\nAPI Failure");
+            System.out.println("API Failure\t\t\t\t\t\t\t");
             return getHTML(urlToRead);
         }
     }
 
-    public static ArrayList<Match> parseMatches(String rawJSON) {
+    public void onMatchParse() {
+        this.matchesParsed++;
+    }
+
+    public void onMatchParseInterrupt() {
+        System.out.println("interrupt detected\t\t\t\t\t");
+        this.matchParseInterrupt = true;
+    }
+
+    public void onNewThread(){
+        this.threadCount++;
+    }
+
+    public void onFinishedThread(){
+        this.threadCount--;
+    }
+
+    public ArrayList<Match> parseMatches(String rawJSON) {
 
         JSONParser parser = new JSONParser();
         ArrayList<Match> matchList = new ArrayList<Match>();
@@ -62,46 +105,59 @@ public class APIInterface {
                 }
             }
         } catch (ParseException pe) {
-            System.out.println("position: " + pe.getPosition());
-            System.out.println(pe);
+            System.out.println(pe + "\t\t (initial parse error)");
         }
+        System.out.println(String.format("expecting %d matches", matchList.size()));
+        this.matchesToParse = matchList.size();
+        this.matchParseInterrupt = false;
         crossReferenceMatches(matchList);
         return matchList;
     }
 
-    public static void crossReferenceMatches(ArrayList<Match> matchList) {
+    public void crossReferenceMatches(ArrayList<Match> matchList) {
 
         JSONParser parser = new JSONParser();
-        int counter = 0;
         for (Match match : matchList) {
-            counter++;
-            System.out.print(String.format("\rmatch progress: %d/%d", counter, matchList.size()));
-            for (String player1 : match.team1Players) {
-                for (String player2 : match.team2Players) {
-                    String events = getHTML(String.format(
-                            "https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s", player1, player2));
-                    try {
-                        if (events != null) {
-                            Object obj = parser.parse(events);
-                            JSONArray eventHistory = (JSONArray) obj;
-                            for (Object eventObj : eventHistory) {
-                                JSONObject event = (JSONObject) eventObj;
-                                Timestamp time = new Timestamp(event.get("TimeStamp").toString());
-                                if (time.isBetween(match.startTime, match.endTime)) {
-                                    match.addEvent(buildEvent(event, null, time));
+            this.onNewThread();
+            CompletableFuture.runAsync(() -> {
+                for (String player1 : match.team1Players) {
+                        for (String player2 : match.team2Players) {
+                            String events = getHTML(
+                                    String.format("https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s",
+                                            player1, player2));
+                            try {
+                                if (events != null) {
+                                    Object obj = parser.parse(events);
+                                    JSONArray eventHistory = (JSONArray) obj;
+                                    for (Object eventObj : eventHistory) {
+                                        JSONObject event = (JSONObject) eventObj;
+                                        Timestamp time = new Timestamp(event.get("TimeStamp").toString());
+                                        if (time.isBetween(match.startTime, match.endTime)) {
+                                            match.addEvent(buildEvent(event, null, time));
+                                        }
+                                    }
                                 }
+                            } catch (ParseException pe) {
+                                System.out.println(pe + "\t\t (cross-reference error)");
                             }
                         }
-                    } catch (ParseException pe) {
-                        System.out.println("position: " + pe.getPosition());
-                        System.out.println(pe);
-                    }
                 }
-            }
+                this.onFinishedThread();
+                this.onMatchParse();
+            });
+        }
+        CompletableFuture.runAsync(() -> {
+            Scanner sc = new Scanner(System.in);
+            // sc.nextInt();
+            sc.close();
+            this.onMatchParseInterrupt();
+        });
+        while (this.matchesParsed < this.matchesToParse && !this.matchParseInterrupt) {
+            System.out.print(String.format("m: %d p: %d t: %d r: %d\r", this.matchesParsed, this.playersParsed, this.threadCount, this.APIresponses));
         }
     }
 
-    public static Event buildEvent(JSONObject event, String matchID, Timestamp timestamp) {
+    public Event buildEvent(JSONObject event, String matchID, Timestamp timestamp) {
 
         String eventID, player1ID, player2ID;
         eventID = event.get("EventId").toString();
@@ -117,7 +173,7 @@ public class APIInterface {
         return newEvent;
     }
 
-    public static Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
+    public Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
         Snapshot snap = new Snapshot(null, playerID, eventID);
         snap.addMain(parseItem(((JSONObject) equipment.get("MainHand"))));
         snap.addOff(parseItem(((JSONObject) equipment.get("OffHand"))));
@@ -128,7 +184,7 @@ public class APIInterface {
         return snap;
     }
 
-    public static String parseItem(JSONObject item) {
+    public String parseItem(JSONObject item) {
 
         if (item == null) {
             return "";
@@ -146,28 +202,5 @@ public class APIInterface {
             String[] itemStrings2 = noTier.split("@");
             return itemStrings2[0];
         }
-    }
-
-    public static void main(String[] args) {
-        ArrayList<Match> matchList = new ArrayList<Match>();
-        int limit = 100;
-        int total = 1000;
-        for (int i = 0; i < total; i += limit) {
-            System.out.println(String.format("retrieving matches %d-%d", i, i + limit - 1));
-            String URL = String.format(
-                    "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit, i);
-            ArrayList<Match> newMatches = parseMatches(getHTML(URL));
-            System.out.println(String.format("matches %d-%d retrieved", i, i + limit - 1));
-            System.out.println(String.format("analyzing matches %d-%d", i, i + limit - 1));
-            Analyzer analyzer = new Analyzer();
-            analyzer.parseMatches(newMatches);
-            analyzer.printStats();
-            matchList.addAll(newMatches);
-        }
-        System.out.println("\nall matches retrieved");
-        System.out.println("analyzing all matches\n");
-        Analyzer analyzer = new Analyzer();
-        analyzer.parseMatches(matchList);
-        analyzer.printStats();
     }
 }

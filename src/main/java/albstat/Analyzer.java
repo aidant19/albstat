@@ -53,8 +53,6 @@ public class Analyzer {
                 if (!(parsedPlayers1.contains(event.player1ID))) {
                     parsedSnaps1.add(event.player1Snapshot);
                     parsedPlayers1.add(event.player1ID);
-                } else {
-                    System.out.println("player already appeared");
                 }
                 if (!(parsedPlayers2.contains(event.player2ID))) {
                     parsedSnaps2.add(event.player2Snapshot);
