@@ -130,12 +130,12 @@ public class APIInterface {
 
     public Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
         Snapshot snap = new Snapshot(null, playerID, eventID);
-        snap.addMain(parseItem(((JSONObject) equipment.get("MainHand"))));
-        snap.addOff(parseItem(((JSONObject) equipment.get("OffHand"))));
-        snap.addHead(parseItem(((JSONObject) equipment.get("Head"))));
-        snap.addArmor(parseItem(((JSONObject) equipment.get("Armor"))));
-        snap.addShoe(parseItem(((JSONObject) equipment.get("Shoes"))));
-        snap.addCape(parseItem(((JSONObject) equipment.get("Cape"))));
+        snap.addMain(((JSONObject) equipment.get("MainHand")).get("Type").toString());
+        snap.addOff(((JSONObject) equipment.get("OffHand")).get("Type").toString());
+        snap.addHead(((JSONObject) equipment.get("Head")).get("Type").toString());
+        snap.addArmor(((JSONObject) equipment.get("Armor")).get("Type").toString());
+        snap.addShoe(((JSONObject) equipment.get("Shoes")).get("Type").toString());
+        snap.addCape(((JSONObject) equipment.get("Cape")).get("Type").toString());
         return snap;
     }
 }
