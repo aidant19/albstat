@@ -14,10 +14,5 @@ public class Driver{
         int offset = 0;
         System.out.println(String.format("retrieving matches %d-%d", offset + 1, offset + limit));
         ArrayList<Match> matchList = apiInterface.getMatches(offset, limit);
-        System.out.println("\nall matches retrieved");
-        System.out.println("analyzing all matches\n");
-        Analyzer analyzer = new Analyzer();
-        analyzer.parseMatches(matchList);
-        analyzer.printStats();
     }
 }
