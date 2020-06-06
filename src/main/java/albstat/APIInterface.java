@@ -46,7 +46,7 @@ public class APIInterface {
             rd.close();
             return result.toString();
         } catch (Exception e) {
-            System.out.println("API Failure\t\t\t\t\t\t\t");
+            System.out.println("API Failure");
             return getHTML(urlToRead);
         }
     }
@@ -63,25 +63,23 @@ public class APIInterface {
                 if (Integer.parseInt(match.get("crystalLeagueLevel").toString()) == 1) {
                     continue;
                 } else {
-                    Timestamp startTime, endTime;
-                    int winner;
-                    startTime = new Timestamp(match.get("startTime").toString());
+                    Timestamp startTime = new Timestamp(match.get("startTime").toString());
+                    int winner = Integer.parseInt(match.get("winner").toString());
+                    JSONObject team1 = (JSONObject) match.get("team1Results");
+                    JSONObject team2 = (JSONObject) match.get("team2Results");
+                    Set<String> team1Players = (Set<String>) team1.keySet();
+                    Set<String> team2Players = (Set<String>) team2.keySet();
                     JSONArray timeline1 = (JSONArray) match.get("team1Timeline");
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
-                    endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
-                    winner = Integer.parseInt(match.get("winner").toString());
-                    JSONObject team1 = (JSONObject) match.get("team1Results");
-                    Set<String> team1Players = (Set<String>) team1.keySet();
-                    JSONObject team2 = (JSONObject) match.get("team2Results");
-                    Set<String> team2Players = (Set<String>) team2.keySet();
+                    Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
                     matchList.add(new Match(team1Players, team2Players, startTime, endTime, winner));
                 }
             }
         } catch (ParseException pe) {
-            System.out.println(pe + "\t\t (initial parse error)");
+            System.out.println(pe + " (initial parse error)");
         }
-        System.out.println(String.format("expecting %d matches", matchList.size()));
         this.matchesToParse = matchList.size();
+        System.out.println(String.format("matches to parse: %d", this.matchesToParse));
         crossReferenceMatches(matchList);
         return matchList;
     }
