@@ -115,14 +115,13 @@ public class APIInterface {
 
     public Event buildEvent(JSONObject event, Timestamp timestamp) {
 
-        String eventID, player1ID, player2ID;
-        eventID = event.get("EventId").toString();
+        String eventID = event.get("EventId").toString();
         JSONObject killer = (JSONObject) event.get("Killer");
-        JSONObject killerEquipment = (JSONObject) killer.get("Equipment");
-        player1ID = killer.get("Id").toString();
         JSONObject victim = (JSONObject) event.get("Victim");
+        JSONObject killerEquipment = (JSONObject) killer.get("Equipment");
+        String player1ID = killer.get("Id").toString();
         JSONObject victimEquipment = (JSONObject) victim.get("Equipment");
-        player2ID = victim.get("Id").toString();
+        String player2ID = victim.get("Id").toString();
         Event newEvent = new Event(eventID, player1ID, player2ID, timestamp);
         newEvent.player1Snapshot = buildSnapshot(killerEquipment, eventID, player1ID);
         newEvent.player2Snapshot = buildSnapshot(victimEquipment, eventID, player2ID);
