@@ -101,7 +101,7 @@ public class APIInterface {
                                 JSONObject event = (JSONObject) eventObj;
                                 Timestamp time = new Timestamp(event.get("TimeStamp").toString());
                                 if (time.isBetween(match.startTime, match.endTime)) {
-                                    match.addEvent(buildEvent(event, null, time));
+                                    match.addEvent(buildEvent(event, time));
                                 }
                             }
                         }
@@ -113,7 +113,7 @@ public class APIInterface {
         }
     }
 
-    public Event buildEvent(JSONObject event, String matchID, Timestamp timestamp) {
+    public Event buildEvent(JSONObject event, Timestamp timestamp) {
 
         String eventID, player1ID, player2ID;
         eventID = event.get("EventId").toString();
@@ -123,14 +123,14 @@ public class APIInterface {
         JSONObject victim = (JSONObject) event.get("Victim");
         JSONObject victimEquipment = (JSONObject) victim.get("Equipment");
         player2ID = victim.get("Id").toString();
-        Event newEvent = new Event(eventID, player1ID, player2ID, matchID, timestamp);
+        Event newEvent = new Event(eventID, player1ID, player2ID, timestamp);
         newEvent.player1Snapshot = buildSnapshot(killerEquipment, eventID, player1ID);
         newEvent.player2Snapshot = buildSnapshot(victimEquipment, eventID, player2ID);
         return newEvent;
     }
 
     public Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
-        Snapshot snap = new Snapshot(null, playerID, eventID);
+        Snapshot snap = new Snapshot(playerID, eventID);
         snap.addMain(((JSONObject) equipment.get("MainHand")).get("Type").toString());
         snap.addOff(((JSONObject) equipment.get("OffHand")).get("Type").toString());
         snap.addHead(((JSONObject) equipment.get("Head")).get("Type").toString());

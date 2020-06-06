@@ -6,7 +6,6 @@ package albstat;
 
 public class Snapshot {
 
-    String snapshotID;
     String playerID;
     String eventID;
     String mainHandID;
@@ -16,8 +15,7 @@ public class Snapshot {
     String shoeID;
     String capeID;
 
-    public Snapshot(String snapshotID, String playerID, String eventID) {
-        this.snapshotID = snapshotID;
+    public Snapshot(String playerID, String eventID) {
         this.playerID = playerID;
         this.eventID = eventID;
     }

@@ -14,12 +14,15 @@ public class Event {
     Snapshot player1Snapshot;
     Snapshot player2Snapshot;
 
-    public Event(String eventID, String player1ID, String player2ID, String matchID, Timestamp timestamp) {
+    public Event(String eventID, String player1ID, String player2ID, Timestamp timestamp) {
         this.eventID = eventID;
         this.player1ID = player1ID;
         this.player2ID = player2ID;
-        this.matchID = matchID;
         this.timestamp = timestamp;
+    }
+
+    public void setMatchID(String m){
+        this.matchID = m;
     }
 
     public String toString(){

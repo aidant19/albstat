@@ -30,6 +30,7 @@ public class Match {
     }
 
     public void addEvent(Event e){
+        e.setMatchID(this.matchID);
         this.events.add(e);
     }
 
