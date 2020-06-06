@@ -106,7 +106,7 @@ public class APIInterface {
                             }
                         }
                     } catch (ParseException pe) {
-                        System.out.println(pe + "\t\t (cross-reference error)");
+                        System.out.println(pe + " (cross-reference error)");
                     }
                 }
             }
