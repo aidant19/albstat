@@ -10,9 +10,10 @@ public class Driver{
 
     public static void main(String[] args) {
         APIInterface apiInterface = new APIInterface();
-        int limit = 1000;
+        int limit = 5;
         int offset = 0;
-        System.out.println(String.format("retrieving matches %d-%d", offset + 1, offset + limit));
+        System.out.println(String.format("retrieving matches %d-%d", offset, limit));
         ArrayList<Match> matchList = apiInterface.getMatches(offset, limit);
+        DBWriter.writeDBFile(matchList);
     }
 }

@@ -65,7 +65,7 @@ public class APIInterface {
                 } else {
                     Timestamp startTime = new Timestamp(match.get("startTime").toString());
                     int winner = Integer.parseInt(match.get("winner").toString());
-                    String matchID = match.get("matchId").toString();
+                    String matchID = match.get("MatchId").toString();
                     JSONObject team1 = (JSONObject) match.get("team1Results");
                     JSONObject team2 = (JSONObject) match.get("team2Results");
                     Set<String> team1Players = (Set<String>) team1.keySet();
@@ -130,12 +130,20 @@ public class APIInterface {
 
     public Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
         Snapshot snap = new Snapshot(playerID, eventID);
-        snap.addMain(((JSONObject) equipment.get("MainHand")).get("Type").toString());
-        snap.addOff(((JSONObject) equipment.get("OffHand")).get("Type").toString());
-        snap.addHead(((JSONObject) equipment.get("Head")).get("Type").toString());
-        snap.addArmor(((JSONObject) equipment.get("Armor")).get("Type").toString());
-        snap.addShoe(((JSONObject) equipment.get("Shoes")).get("Type").toString());
-        snap.addCape(((JSONObject) equipment.get("Cape")).get("Type").toString());
+        snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
+        snap.addOff(checkItemString((JSONObject) equipment.get("OffHand")));
+        snap.addHead(checkItemString((JSONObject) equipment.get("Head")));
+        snap.addArmor(checkItemString((JSONObject) equipment.get("Armor")));
+        snap.addShoe(checkItemString((JSONObject) equipment.get("Shoes")));
+        snap.addCape(checkItemString((JSONObject) equipment.get("Cape")));
         return snap;
+    }
+
+    public String checkItemString(JSONObject item){
+        if(item == null){
+            return " ";
+        } else {
+            return item.get("Type").toString();
+        }
     }
 }

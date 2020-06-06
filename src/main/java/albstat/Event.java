@@ -26,6 +26,7 @@ public class Event {
     }
 
     public String toString(){
-        return String.format("%s, %s, %s, %s", eventID, player1ID, player2ID, timestamp);
+        String headerString = String.format("%s %s %s %s", eventID, player1ID, player2ID, timestamp);
+        return String.format("%s %s %s", headerString, player1Snapshot.toString(), player2Snapshot.toString());
     }
 }

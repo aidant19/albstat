@@ -45,6 +45,6 @@ public class Snapshot {
     }
 
     public String toString(){
-        return "";
+        return String.format("%s,%s,%s,%s,%s,%s", mainHandID, offHandID, headID, armorID, shoeID, capeID);
     }
 }
