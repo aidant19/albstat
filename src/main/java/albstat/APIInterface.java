@@ -65,6 +65,7 @@ public class APIInterface {
                 } else {
                     Timestamp startTime = new Timestamp(match.get("startTime").toString());
                     int winner = Integer.parseInt(match.get("winner").toString());
+                    String matchID = match.get("matchId").toString();
                     JSONObject team1 = (JSONObject) match.get("team1Results");
                     JSONObject team2 = (JSONObject) match.get("team2Results");
                     Set<String> team1Players = (Set<String>) team1.keySet();
@@ -72,7 +73,7 @@ public class APIInterface {
                     JSONArray timeline1 = (JSONArray) match.get("team1Timeline");
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
                     Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
-                    matchList.add(new Match(team1Players, team2Players, startTime, endTime, winner));
+                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, winner));
                 }
             }
         } catch (ParseException pe) {

@@ -18,8 +18,8 @@ public class Match {
     ArrayList<Event> events;
     int playersParsed;
 
-    public Match(Set<String> team1Players, Set<String> team2Players, Timestamp startTime, Timestamp endTime, int winner) {
-        this.matchID = null;
+    public Match(String matchID, Set<String> team1Players, Set<String> team2Players, Timestamp startTime, Timestamp endTime, int winner) {
+        this.matchID = matchID;
         this.team1Players = team1Players;
         this.team2Players = team2Players;
         this.startTime = startTime;
