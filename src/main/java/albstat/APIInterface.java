@@ -138,24 +138,4 @@ public class APIInterface {
         snap.addCape(parseItem(((JSONObject) equipment.get("Cape"))));
         return snap;
     }
-
-    public String parseItem(JSONObject item) {
-
-        if (item == null) {
-            return "";
-        } else {
-            String itemString = item.get("Type").toString();
-            String[] itemStrings1 = itemString.split("_");
-            itemStrings1[0] = "";
-            String noTier = "";
-            for (String string : itemStrings1) {
-                if (string == null) {
-                    continue;
-                }
-                noTier += string;
-            }
-            String[] itemStrings2 = noTier.split("@");
-            return itemStrings2[0];
-        }
-    }
 }
