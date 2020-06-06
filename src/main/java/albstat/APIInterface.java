@@ -12,24 +12,15 @@ import java.net.*;
 import java.io.*;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
-import java.util.Scanner;
 
 public class APIInterface {
 
     public int matchesToParse;
     public int matchesParsed;
-    public boolean matchParseInterrupt;
-    public int playersParsed;
-    public int threadCount;
-    public int APIresponses;
 
     public APIInterface() {
         this.matchesParsed = 0;
         this.matchesToParse = 0;
-        this.playersParsed = 0;
-        this.threadCount = 0;
-        this.APIresponses = 0;
     }
 
     public ArrayList<Match> getMatches(int offset, int limit) {
@@ -53,29 +44,11 @@ public class APIInterface {
                 result.append(line);
             }
             rd.close();
-            this.APIresponses++;
             return result.toString();
         } catch (Exception e) {
             System.out.println("API Failure\t\t\t\t\t\t\t");
             return getHTML(urlToRead);
         }
-    }
-
-    public void onMatchParse() {
-        this.matchesParsed++;
-    }
-
-    public void onMatchParseInterrupt() {
-        System.out.println("interrupt detected\t\t\t\t\t");
-        this.matchParseInterrupt = true;
-    }
-
-    public void onNewThread(){
-        this.threadCount++;
-    }
-
-    public void onFinishedThread(){
-        this.threadCount--;
     }
 
     public ArrayList<Match> parseMatches(String rawJSON) {
@@ -109,7 +82,6 @@ public class APIInterface {
         }
         System.out.println(String.format("expecting %d matches", matchList.size()));
         this.matchesToParse = matchList.size();
-        this.matchParseInterrupt = false;
         crossReferenceMatches(matchList);
         return matchList;
     }
@@ -118,42 +90,27 @@ public class APIInterface {
 
         JSONParser parser = new JSONParser();
         for (Match match : matchList) {
-            this.onNewThread();
-            CompletableFuture.runAsync(() -> {
-                for (String player1 : match.team1Players) {
-                        for (String player2 : match.team2Players) {
-                            String events = getHTML(
-                                    String.format("https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s",
-                                            player1, player2));
-                            try {
-                                if (events != null) {
-                                    Object obj = parser.parse(events);
-                                    JSONArray eventHistory = (JSONArray) obj;
-                                    for (Object eventObj : eventHistory) {
-                                        JSONObject event = (JSONObject) eventObj;
-                                        Timestamp time = new Timestamp(event.get("TimeStamp").toString());
-                                        if (time.isBetween(match.startTime, match.endTime)) {
-                                            match.addEvent(buildEvent(event, null, time));
-                                        }
-                                    }
+            for (String player1 : match.team1Players) {
+                for (String player2 : match.team2Players) {
+                    String events = getHTML(String.format(
+                            "https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s", player1, player2));
+                    try {
+                        if (events != null) {
+                            Object obj = parser.parse(events);
+                            JSONArray eventHistory = (JSONArray) obj;
+                            for (Object eventObj : eventHistory) {
+                                JSONObject event = (JSONObject) eventObj;
+                                Timestamp time = new Timestamp(event.get("TimeStamp").toString());
+                                if (time.isBetween(match.startTime, match.endTime)) {
+                                    match.addEvent(buildEvent(event, null, time));
                                 }
-                            } catch (ParseException pe) {
-                                System.out.println(pe + "\t\t (cross-reference error)");
                             }
                         }
+                    } catch (ParseException pe) {
+                        System.out.println(pe + "\t\t (cross-reference error)");
+                    }
                 }
-                this.onFinishedThread();
-                this.onMatchParse();
-            });
-        }
-        CompletableFuture.runAsync(() -> {
-            Scanner sc = new Scanner(System.in);
-            // sc.nextInt();
-            sc.close();
-            this.onMatchParseInterrupt();
-        });
-        while (this.matchesParsed < this.matchesToParse && !this.matchParseInterrupt) {
-            System.out.print(String.format("m: %d p: %d t: %d r: %d\r", this.matchesParsed, this.playersParsed, this.threadCount, this.APIresponses));
+            }
         }
     }
 
