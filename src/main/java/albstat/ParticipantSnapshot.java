@@ -9,4 +9,8 @@ public class ParticipantSnapshot extends Snapshot {
     public ParticipantSnapshot(String playerID){
         super(playerID, null);
     }
+
+    public String toString(){
+        return String.format("%s,%s,%s,%s,%s,%s,%s", playerID, mainHandID, offHandID, headID, armorID, shoeID, capeID);
+    }
 }

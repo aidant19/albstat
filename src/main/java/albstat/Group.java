@@ -14,7 +14,16 @@ public class Group {
         this.snapshots = new ArrayList<MainHandSnapshot>();
     }
 
-    public void addSnap(MainHandSnapshot m){
+    public void addSnap(MainHandSnapshot m) {
         this.snapshots.add(m);
+    }
+
+    public String toString() {
+        String snapshotsString = "";
+        for (MainHandSnapshot mainHandSnapshot : snapshots) {
+            snapshotsString += mainHandSnapshot.toString() + ",";
+        }
+        snapshotsString = snapshotsString.substring(0, snapshotsString.length() - 1);
+        return snapshotsString;
     }
 }

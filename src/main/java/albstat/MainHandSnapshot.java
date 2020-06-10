@@ -14,4 +14,8 @@ public class MainHandSnapshot extends Snapshot {
         this.shoeID = "_";
         this.capeID = "_";
     }
+
+    public String toString(){
+        return String.format("%s,%s,%s,%s,%s,%s,%s", playerID, mainHandID, offHandID, headID, armorID, shoeID, capeID);
+    }
 }

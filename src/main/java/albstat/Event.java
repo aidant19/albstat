@@ -28,8 +28,8 @@ public class Event {
     }
 
     public String toString(){
-        String headerString = String.format("%s,%s,%s,%s", eventID, player1ID, player2ID, timestamp);
-        return String.format("%s,%s,%s", headerString, player1Snapshot.toString(), player2Snapshot.toString());
+        String headerString = String.format("%s,%s,%s,%s,%d", eventID, player1ID, player2ID, timestamp, participants.snapshots.size());
+        return String.format("%s,%s,%s,%s", headerString, player1Snapshot.toString(), player2Snapshot.toString(), group.toString(), participants.toString());
     }
 
     public static Event buildFromStrings(String eventString, String matchID){
