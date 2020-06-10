@@ -19,9 +19,10 @@ public class Match {
     Set<String> team1Players;
     Set<String> team2Players;
     ArrayList<Event> events;
+    MatchResult results;
 
     public Match(String matchID, Set<String> team1Players, Set<String> team2Players, Timestamp startTime,
-            Timestamp endTime, int level, int winner) {
+            Timestamp endTime, int level, int winner, MatchResult results) {
         this.matchID = matchID;
         this.team1Players = team1Players;
         this.team2Players = team2Players;
@@ -30,6 +31,7 @@ public class Match {
         this.level = level;
         this.winner = winner;
         this.events = new ArrayList<Event>();
+        this.results = results;
     }
 
     public void addEvent(Event e) {
@@ -70,11 +72,15 @@ public class Match {
         int winner = Integer.parseInt(matchStrings[4]);
         Set<String> team1Players = new HashSet<String>(Arrays.asList(team1String.split(" ")));
         Set<String> team2Players = new HashSet<String>(Arrays.asList(team2String.split(" ")));
-        Match match = new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner);
+        Match match = new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, null);
         String[] eventStrings = eventString.split(" ");
         for (String string : eventStrings) {
             match.addEvent(Event.buildFromStrings(string, matchID));
         }
         return match;
+    }
+
+    public int verifyData(){
+        return DataVerifier.verifyData(events, results);
     }
 }

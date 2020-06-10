@@ -10,7 +10,7 @@ public class Driver{
 
     public static void main(String[] args) {
         APIInterface apiInterface = new APIInterface();
-        int limit = 5;
+        int limit = 100;
         int offset = 0;
         System.out.println(String.format("retrieving matches %d-%d", offset, limit));
         ArrayList<Match> matchList1 = apiInterface.getMatches(offset, limit);

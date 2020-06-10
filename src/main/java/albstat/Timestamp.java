@@ -57,15 +57,26 @@ public class Timestamp {
             }
         }
 
-        if (this.time[0] < time.time[0]) {
-            return false;
-        } else if (this.time[1] < time.time[1]) {
-            return false;
-        } else if (this.time[2] < time.time[2]) {
-            return false;
-        } else {
-            return true;
+        if (this.time[0] != time.time[0]) {
+            if (this.time[0] < time.time[0]) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (this.time[1] != time.time[1]) {
+            if (this.time[1] < time.time[1]) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (this.time[2] != time.time[2]) {
+            if (this.time[2] < time.time[2]) {
+                return false;
+            } else {
+                return true;
+            }
         }
+        return true;
     }
 
     public boolean isBefore(Timestamp time) {
@@ -90,15 +101,26 @@ public class Timestamp {
             }
         }
 
-        if (this.time[0] > time.time[0]) {
-            return false;
-        } else if (this.time[1] > time.time[1]) {
-            return false;
-        } else if (this.time[2] > time.time[2]) {
-            return false;
-        } else {
-            return true;
+        if (this.time[0] != time.time[0]) {
+            if (this.time[0] > time.time[0]) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (this.time[1] != time.time[1]) {
+            if (this.time[1] > time.time[1]) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (this.time[2] != time.time[2]) {
+            if (this.time[2] > time.time[2]) {
+                return false;
+            } else {
+                return true;
+            }
         }
+        return true;
     }
 
     public String toString(){

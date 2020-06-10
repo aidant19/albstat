@@ -74,7 +74,8 @@ public class APIInterface {
                     JSONArray timeline1 = (JSONArray) match.get("team1Timeline");
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
                     Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
-                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner));
+                    MatchResult results = buildResult(match, matchID, team1Players, team2Players);
+                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, results));
                 }
             }
         } catch (ParseException pe) {
@@ -90,6 +91,7 @@ public class APIInterface {
 
         JSONParser parser = new JSONParser();
         for (Match match : matchList) {
+            System.out.printf("matches parsed: %d\r", this.matchesParsed);
             for (String player1 : match.team1Players) {
                 for (String player2 : match.team2Players) {
                     String events = getHTML(String.format(
@@ -111,7 +113,31 @@ public class APIInterface {
                     }
                 }
             }
+            int diff = match.verifyData();
+            if(diff != 0){
+                System.exit(1);
+            } else {
+                this.matchesParsed++;
+            }
         }
+    }
+
+    public MatchResult buildResult(JSONObject match, String matchID, Set<String> team1Players, Set<String> team2Players){
+        MatchResult results = new MatchResult(matchID);
+        results.setPlayers(new ArrayList<String>(team1Players), new ArrayList<String>(team2Players));
+        JSONObject team1Results = (JSONObject) match.get("team1Results");
+        for (String player : team1Players) {
+            int kills = Integer.parseInt(((JSONObject)team1Results.get(player)).get("Kills").toString());
+            int deaths = Integer.parseInt(((JSONObject)team1Results.get(player)).get("Deaths").toString());
+            results.setResult(player, kills, deaths);
+        }
+        JSONObject team2Results = (JSONObject) match.get("team2Results");
+        for (String player : team2Players) {
+            int kills = Integer.parseInt(((JSONObject)team2Results.get(player)).get("Kills").toString());
+            int deaths = Integer.parseInt(((JSONObject)team2Results.get(player)).get("Deaths").toString());
+            results.setResult(player, kills, deaths);
+        }
+        return results;
     }
 
     public Event buildEvent(JSONObject event, Timestamp timestamp) {
