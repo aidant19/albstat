@@ -9,13 +9,14 @@ import java.util.ArrayList;
 public class Driver{
 
     public static void main(String[] args) {
-        APIInterface apiInterface = new APIInterface();
         int limit = 100;
-        int offset = 0;
-        System.out.println(String.format("retrieving matches %d-%d", offset, limit));
-        ArrayList<Match> matchList1 = apiInterface.getMatches(offset, limit);
-        DBWriter.writeDBFile(matchList1, "DBFile.txt");
-        ArrayList<Match> matchList2 = new ArrayList<Match>(DBWriter.readDBFile("DBFile.txt"));
-        DBWriter.writeDBFile(matchList2, "DBFile2.txt");
+        for(int i=0;i<1000;i+=limit){
+            APIInterface apiInterface = new APIInterface();
+            int offset = i;
+            ArrayList<Match> matchList = new ArrayList<Match>(DBWriter.readDBFile("DBFile.txt"));
+            System.out.println(String.format("retrieving matches %d-%d", offset, limit+offset));
+            apiInterface.getMatches(offset, limit, matchList);
+            DBWriter.writeDBFile(matchList, "DBFile.txt");
+        }
     }
 }

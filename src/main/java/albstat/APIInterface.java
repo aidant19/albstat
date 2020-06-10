@@ -17,19 +17,20 @@ public class APIInterface {
 
     public int matchesToParse;
     public int matchesParsed;
+    public int duplicates;
 
     public APIInterface() {
         this.matchesParsed = 0;
         this.matchesToParse = 0;
+        this.duplicates = 0;
     }
 
-    public ArrayList<Match> getMatches(int offset, int limit) {
+    public void getMatches(int offset, int limit, ArrayList<Match> matchList) {
         String URL = String.format(
                 "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
                 offset);
         String rawJSON = getHTML(URL);
-        ArrayList<Match> matchList = parseMatches(rawJSON);
-        return matchList;
+        parseMatches(rawJSON, matchList);
     }
 
     public String getHTML(String urlToRead) {
@@ -51,17 +52,20 @@ public class APIInterface {
         }
     }
 
-    public ArrayList<Match> parseMatches(String rawJSON) {
+    public void parseMatches(String rawJSON, ArrayList<Match> matchList) {
 
+        ArrayList<Match> newMatchList = new ArrayList<Match>();
         JSONParser parser = new JSONParser();
-        ArrayList<Match> matchList = new ArrayList<Match>();
         try {
             Object obj = parser.parse(rawJSON);
+            ArrayList<String> matchIDs = getMatchIDs(matchList);
             JSONArray array = (JSONArray) obj;
             for (Object matchObj : array) {
                 JSONObject match = (JSONObject) matchObj;
                 if (Integer.parseInt(match.get("crystalLeagueLevel").toString()) == 1) {
                     continue;
+                } else if (matchIDs.contains(match.get("MatchId").toString())){
+                    this.duplicates++;
                 } else {
                     Timestamp startTime = new Timestamp(match.get("startTime").toString());
                     int winner = Integer.parseInt(match.get("winner").toString());
@@ -75,16 +79,17 @@ public class APIInterface {
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
                     Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
                     MatchResult results = buildResult(match, matchID, team1Players, team2Players);
-                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, results));
+                    newMatchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, results));
                 }
             }
         } catch (ParseException pe) {
             System.out.println(pe + " (initial parse error)");
         }
-        this.matchesToParse = matchList.size();
-        System.out.println(String.format("matches to parse: %d", this.matchesToParse));
-        crossReferenceMatches(matchList);
-        return matchList;
+        this.matchesToParse = newMatchList.size();
+        System.out.printf("duplicates found: %d\n", this.duplicates);
+        System.out.printf("matches to parse: %d\n", this.matchesToParse);
+        crossReferenceMatches(newMatchList);
+        matchList.addAll(newMatchList);
     }
 
     public void crossReferenceMatches(ArrayList<Match> matchList) {
@@ -220,5 +225,13 @@ public class APIInterface {
         MainHandSnapshot snap = new MainHandSnapshot(playerID, null);
         snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
         return snap;
+    }
+
+    public ArrayList<String> getMatchIDs(ArrayList<Match> matchList){
+        ArrayList<String> matchIDs = new ArrayList<String>();
+        for (Match match : matchList) {
+            matchIDs.add(match.matchID);
+        }
+        return matchIDs;
     }
 }
