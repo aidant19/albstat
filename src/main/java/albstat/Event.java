@@ -13,6 +13,8 @@ public class Event {
     Timestamp timestamp;
     Snapshot player1Snapshot;
     Snapshot player2Snapshot;
+    Group group;
+    Participants participants;
 
     public Event(String eventID, String player1ID, String player2ID, Timestamp timestamp) {
         this.eventID = eventID;
@@ -26,7 +28,24 @@ public class Event {
     }
 
     public String toString(){
-        String headerString = String.format("%s %s %s %s", eventID, player1ID, player2ID, timestamp);
-        return String.format("%s %s %s", headerString, player1Snapshot.toString(), player2Snapshot.toString());
+        String headerString = String.format("%s,%s,%s,%s", eventID, player1ID, player2ID, timestamp);
+        return String.format("%s,%s,%s", headerString, player1Snapshot.toString(), player2Snapshot.toString());
+    }
+
+    public static Event buildFromStrings(String eventString, String matchID){
+        String[] eventStrings = eventString.split(",");
+        String eventID = eventStrings[0];
+        String player1ID = eventStrings[1];
+        String player2ID = eventStrings[2];
+        Timestamp timestamp = new Timestamp(eventStrings[3]);
+        Event event = new Event(eventID, player1ID, player2ID, timestamp);
+        event.setMatchID(matchID);
+        String[] snapshot1Strings = new String[6];
+        String[] snapshot2Strings = new String[6];
+        System.arraycopy(eventStrings, 4, snapshot1Strings, 0, 6);
+        System.arraycopy(eventStrings, 10, snapshot2Strings, 0, 6);
+        event.player1Snapshot = Snapshot.buildFromStrings(snapshot1Strings, player1ID, eventID);
+        event.player2Snapshot = Snapshot.buildFromStrings(snapshot2Strings, player2ID, eventID);
+        return event;
     }
 }

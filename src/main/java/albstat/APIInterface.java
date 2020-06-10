@@ -65,6 +65,7 @@ public class APIInterface {
                 } else {
                     Timestamp startTime = new Timestamp(match.get("startTime").toString());
                     int winner = Integer.parseInt(match.get("winner").toString());
+                    int level = Integer.parseInt(match.get("crystalLeagueLevel").toString());
                     String matchID = match.get("MatchId").toString();
                     JSONObject team1 = (JSONObject) match.get("team1Results");
                     JSONObject team2 = (JSONObject) match.get("team2Results");
@@ -73,7 +74,7 @@ public class APIInterface {
                     JSONArray timeline1 = (JSONArray) match.get("team1Timeline");
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
                     Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
-                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, winner));
+                    matchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner));
                 }
             }
         } catch (ParseException pe) {
@@ -125,6 +126,8 @@ public class APIInterface {
         Event newEvent = new Event(eventID, player1ID, player2ID, timestamp);
         newEvent.player1Snapshot = buildSnapshot(killerEquipment, eventID, player1ID);
         newEvent.player2Snapshot = buildSnapshot(victimEquipment, eventID, player2ID);
+        newEvent.group = getGroup(event);
+        newEvent.participants = getParticipants(event);
         return newEvent;
     }
 
@@ -141,9 +144,53 @@ public class APIInterface {
 
     public String checkItemString(JSONObject item){
         if(item == null){
-            return " ";
+            return "_";
         } else {
             return item.get("Type").toString();
         }
+    }
+
+    public Participants getParticipants(JSONObject event){
+
+        Participants participants = new Participants();
+        JSONArray participantArray = (JSONArray) event.get("Participants");
+        for (Object partiObj : participantArray) {
+            JSONObject parti = (JSONObject) partiObj;
+            JSONObject equipment = (JSONObject) parti.get("Equipment");
+            String partiID = parti.get("Id").toString();
+            participants.addSnap(buildParticipantSnapshot(equipment, partiID));
+        }
+        return participants;
+    }
+
+    public Snapshot buildParticipantSnapshot(JSONObject equipment, String playerID) {
+        Snapshot snap = new ParticipantSnapshot(playerID);
+        snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
+        snap.addOff(checkItemString((JSONObject) equipment.get("OffHand")));
+        snap.addHead(checkItemString((JSONObject) equipment.get("Head")));
+        snap.addArmor(checkItemString((JSONObject) equipment.get("Armor")));
+        snap.addShoe(checkItemString((JSONObject) equipment.get("Shoes")));
+        snap.addCape(checkItemString((JSONObject) equipment.get("Cape")));
+        return snap;
+    }
+
+    public Group getGroup(JSONObject event) {
+
+        Group group = new Group();
+        JSONArray groupMembers = (JSONArray) event.get("GroupMembers");
+        for (Object memberObj : groupMembers) {
+            JSONObject member = (JSONObject) memberObj;
+            JSONObject equipment = (JSONObject) member.get("Equipment");
+            String memberID = member.get("Id").toString();
+            group.addSnap(buildMainHandSnapshot(equipment, memberID));
+        }
+        return group;
+    }
+
+    public MainHandSnapshot buildMainHandSnapshot(JSONObject equipment, String playerID){
+
+        MainHandSnapshot snap = new MainHandSnapshot(null, playerID);
+        snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
+        return snap;
     }
 }

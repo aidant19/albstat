@@ -13,7 +13,9 @@ public class Driver{
         int limit = 5;
         int offset = 0;
         System.out.println(String.format("retrieving matches %d-%d", offset, limit));
-        ArrayList<Match> matchList = apiInterface.getMatches(offset, limit);
-        DBWriter.writeDBFile(matchList);
+        ArrayList<Match> matchList1 = apiInterface.getMatches(offset, limit);
+        DBWriter.writeDBFile(matchList1, "DBFile.txt");
+        ArrayList<Match> matchList2 = new ArrayList<Match>(DBWriter.readDBFile("DBFile.txt"));
+        DBWriter.writeDBFile(matchList2, "DBFile2.txt");
     }
 }

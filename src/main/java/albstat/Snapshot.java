@@ -47,4 +47,15 @@ public class Snapshot {
     public String toString(){
         return String.format("%s,%s,%s,%s,%s,%s", mainHandID, offHandID, headID, armorID, shoeID, capeID);
     }
+
+    public static Snapshot buildFromStrings(String[] snapshotStrings, String playerID, String eventID){
+        Snapshot snapshot = new Snapshot(playerID, eventID);
+        snapshot.addMain(snapshotStrings[0]);
+        snapshot.addOff(snapshotStrings[1]);
+        snapshot.addHead(snapshotStrings[2]);
+        snapshot.addArmor(snapshotStrings[3]);
+        snapshot.addShoe(snapshotStrings[4]);
+        snapshot.addCape(snapshotStrings[5]);
+        return snapshot;
+    }
 }
