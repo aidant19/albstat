@@ -1,7 +1,5 @@
 package albstat;
 
-import java.util.Arrays;
-
 // aidan tokarski
 // 6/1/20
 // a class for containing event data
