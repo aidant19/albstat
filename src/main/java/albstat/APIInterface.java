@@ -132,7 +132,7 @@ public class APIInterface {
     }
 
     public Snapshot buildSnapshot(JSONObject equipment, String eventID, String playerID) {
-        
+
         Snapshot snap = new Snapshot(playerID, eventID);
         snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
         snap.addOff(checkItemString((JSONObject) equipment.get("OffHand")));
@@ -191,7 +191,7 @@ public class APIInterface {
 
     public MainHandSnapshot buildMainHandSnapshot(JSONObject equipment, String playerID){
 
-        MainHandSnapshot snap = new MainHandSnapshot(null, playerID);
+        MainHandSnapshot snap = new MainHandSnapshot(playerID, null);
         snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
         return snap;
     }
