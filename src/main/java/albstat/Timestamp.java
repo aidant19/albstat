@@ -124,6 +124,6 @@ public class Timestamp {
     }
 
     public String toString(){
-        return String.format("%d-%d-%dT%.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0], this.time[1], this.time[2]);
+        return String.format("%d-%d-%d %.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0], this.time[1], this.time[2]);
     }
 }

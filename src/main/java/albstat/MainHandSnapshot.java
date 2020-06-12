@@ -8,11 +8,11 @@ public class MainHandSnapshot extends Snapshot {
 
     public MainHandSnapshot(String playerID, String eventID) {
         super(playerID, eventID);
-        this.offHandID = "_";
-        this.armorID = "_";
-        this.headID = "_";
-        this.shoeID = "_";
-        this.capeID = "_";
+        this.offHandID = null;
+        this.armorID = null;
+        this.headID = null;
+        this.shoeID = null;
+        this.capeID = null;
     }
 
     public String toString(){
