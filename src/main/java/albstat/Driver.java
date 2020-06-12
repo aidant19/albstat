@@ -13,10 +13,10 @@ public class Driver{
         for(int i=0;i<1000;i+=limit){
             APIInterface apiInterface = new APIInterface();
             int offset = i;
-            ArrayList<Match> matchList = new ArrayList<Match>(DBWriter.readDBFile("DBFile.txt"));
+            ArrayList<Match> matchList = new ArrayList<Match>(TextWriter.readDBFile("DBFile.txt"));
             System.out.println(String.format("retrieving matches %d-%d", offset, limit+offset));
             apiInterface.getMatches(offset, limit, matchList);
-            DBWriter.writeDBFile(matchList, "DBFile.txt");
+            TextWriter.writeDBFile(matchList, "DBFile.txt");
             System.out.println();
         }
     }

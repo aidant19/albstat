@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-public class DBWriter {
+public class TextWriter {
 
     public static void writeDBFile(List<Match> matchList, String filePath) {
 

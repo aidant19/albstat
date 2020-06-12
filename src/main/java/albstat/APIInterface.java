@@ -18,6 +18,7 @@ public class APIInterface {
     public int matchesToParse;
     public int matchesParsed;
     public int duplicates;
+    public String lastReport;
 
     public APIInterface() {
         this.matchesParsed = 0;
@@ -47,7 +48,7 @@ public class APIInterface {
             rd.close();
             return result.toString();
         } catch (Exception e) {
-            System.out.println("API Failure");
+            reportStatus("API Failure", false);
             return getHTML(urlToRead);
         }
     }
@@ -64,7 +65,7 @@ public class APIInterface {
                 JSONObject match = (JSONObject) matchObj;
                 if (Integer.parseInt(match.get("crystalLeagueLevel").toString()) == 1) {
                     continue;
-                } else if (matchIDs.contains(match.get("MatchId").toString())){
+                } else if (matchIDs.contains(match.get("MatchId").toString())) {
                     this.duplicates++;
                 } else {
                     Timestamp startTime = new Timestamp(match.get("startTime").toString());
@@ -79,16 +80,20 @@ public class APIInterface {
                     JSONObject lastEvent = (JSONObject) timeline1.get(timeline1.size() - 1);
                     Timestamp endTime = new Timestamp(lastEvent.get("TimeStamp").toString());
                     MatchResult results = buildResult(match, matchID, team1Players, team2Players);
-                    newMatchList.add(new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, results));
+                    newMatchList.add(
+                            new Match(matchID, team1Players, team2Players, startTime, endTime, level, winner, results));
                 }
             }
         } catch (ParseException pe) {
-            System.out.println(pe + " (initial parse error)");
+            reportStatus(pe + " (initial parse error)", false);
         }
         this.matchesToParse = newMatchList.size();
         System.out.printf("duplicates found: %d\n", this.duplicates);
         System.out.printf("matches to parse: %d\n", this.matchesToParse);
         crossReferenceMatches(newMatchList);
+        if(lastReport != null){
+            System.out.println();
+        }
         matchList.addAll(newMatchList);
     }
 
@@ -96,7 +101,7 @@ public class APIInterface {
 
         JSONParser parser = new JSONParser();
         for (Match match : matchList) {
-            System.out.printf("matches parsed: %d\r", this.matchesParsed);
+            reportStatus(String.format("%s: %d", "matches parsed", this.matchesParsed), false);
             for (String player1 : match.team1Players) {
                 for (String player2 : match.team2Players) {
                     String events = getHTML(String.format(
@@ -114,12 +119,11 @@ public class APIInterface {
                             }
                         }
                     } catch (ParseException pe) {
-                        System.out.println(pe + " (cross-reference error)");
+                        reportStatus(pe + " (cross-reference error)", false);
                     }
                 }
             }
-            int diff = match.verifyData();
-            if(diff != 0){
+            if (match.verifyData() != 0) {
                 System.exit(1);
             } else {
                 this.matchesParsed++;
@@ -127,19 +131,20 @@ public class APIInterface {
         }
     }
 
-    public MatchResult buildResult(JSONObject match, String matchID, Set<String> team1Players, Set<String> team2Players){
+    public MatchResult buildResult(JSONObject match, String matchID, Set<String> team1Players,
+            Set<String> team2Players) {
         MatchResult results = new MatchResult(matchID);
         results.setPlayers(new ArrayList<String>(team1Players), new ArrayList<String>(team2Players));
         JSONObject team1Results = (JSONObject) match.get("team1Results");
         for (String player : team1Players) {
-            int kills = Integer.parseInt(((JSONObject)team1Results.get(player)).get("Kills").toString());
-            int deaths = Integer.parseInt(((JSONObject)team1Results.get(player)).get("Deaths").toString());
+            int kills = Integer.parseInt(((JSONObject) team1Results.get(player)).get("Kills").toString());
+            int deaths = Integer.parseInt(((JSONObject) team1Results.get(player)).get("Deaths").toString());
             results.setResult(player, kills, deaths);
         }
         JSONObject team2Results = (JSONObject) match.get("team2Results");
         for (String player : team2Players) {
-            int kills = Integer.parseInt(((JSONObject)team2Results.get(player)).get("Kills").toString());
-            int deaths = Integer.parseInt(((JSONObject)team2Results.get(player)).get("Deaths").toString());
+            int kills = Integer.parseInt(((JSONObject) team2Results.get(player)).get("Kills").toString());
+            int deaths = Integer.parseInt(((JSONObject) team2Results.get(player)).get("Deaths").toString());
             results.setResult(player, kills, deaths);
         }
         return results;
@@ -174,15 +179,15 @@ public class APIInterface {
         return snap;
     }
 
-    public String checkItemString(JSONObject item){
-        if(item == null){
+    public String checkItemString(JSONObject item) {
+        if (item == null) {
             return "_";
         } else {
             return item.get("Type").toString();
         }
     }
 
-    public Participants getParticipants(JSONObject event){
+    public Participants getParticipants(JSONObject event) {
 
         Participants participants = new Participants();
         JSONArray participantArray = (JSONArray) event.get("Participants");
@@ -220,18 +225,48 @@ public class APIInterface {
         return group;
     }
 
-    public MainHandSnapshot buildMainHandSnapshot(JSONObject equipment, String playerID){
+    public MainHandSnapshot buildMainHandSnapshot(JSONObject equipment, String playerID) {
 
         MainHandSnapshot snap = new MainHandSnapshot(playerID, null);
         snap.addMain(checkItemString((JSONObject) equipment.get("MainHand")));
         return snap;
     }
 
-    public ArrayList<String> getMatchIDs(ArrayList<Match> matchList){
+    public ArrayList<String> getMatchIDs(ArrayList<Match> matchList) {
         ArrayList<String> matchIDs = new ArrayList<String>();
         for (Match match : matchList) {
             matchIDs.add(match.matchID);
         }
         return matchIDs;
+    }
+
+    public void reportStatus(String status, boolean last) {
+        String newReport;
+        if (lastReport == null) {
+            newReport = status;
+        } else if (status.contains("matches parsed")) {
+            if (lastReport.contains("matches parsed")) {
+                newReport = status;
+            } else {
+                System.out.println(lastReport);
+                newReport = status;
+            }
+        } else if (lastReport.contains(status)) {
+            if (lastReport.contains(": ")) {
+                int statusCount = Integer.parseInt(lastReport.split(": ")[1]);
+                newReport = String.format("%s: %d", status, statusCount + 1);
+            } else {
+                newReport = String.format("%s: 2", status);
+            }
+        } else {
+            System.out.println(lastReport);
+            newReport = status;
+        }
+        if (last){
+            System.out.println(newReport);
+        } else {
+            System.out.print(newReport + "\r");
+        }
+        lastReport = newReport;
     }
 }
