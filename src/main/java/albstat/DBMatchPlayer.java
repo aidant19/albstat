@@ -2,7 +2,7 @@ package albstat;
 
 // aidan tokarski
 // 6/12/20
-// a class for containing player fields
+// a class for containing match player fields
 
 public class DBMatchPlayer{
 

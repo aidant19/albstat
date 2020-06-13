@@ -49,7 +49,7 @@ public class APIInterface {
             rd.close();
             return result.toString();
         } catch (Exception e) {
-            reportStatus("API Failure", false);
+            reportStatus("API Failure", true, false);
             return getHTML(urlToRead);
         }
     }
@@ -85,13 +85,13 @@ public class APIInterface {
                 }
             }
         } catch (ParseException pe) {
-            reportStatus(pe + " (initial parse error)", false);
+            reportStatus(pe + " (initial parse error)", true, false);
         }
         this.matchesToParse = matchList.size();
         System.out.printf("duplicates found: %d\n", this.duplicates);
         System.out.printf("matches to parse: %d\n", this.matchesToParse);
         crossReferenceMatches(matchList);
-        if(lastReport != null){
+        if (lastReport != null) {
             System.out.println();
         }
         return matchList;
@@ -119,16 +119,16 @@ public class APIInterface {
                             }
                         }
                     } catch (ParseException pe) {
-                        reportStatus(pe + " (cross-reference error)", false);
+                        reportStatus(pe + " (cross-reference error)", true, false);
                     }
                 }
             }
             if (match.verifyData() != 0) {
                 errorList.add(match);
-                reportStatus(String.format("data verification error: @%s", match.matchID), false);
+                reportStatus(String.format("data verification error: @%s", match.matchID), true, false);
             }
             this.matchesParsed++;
-            reportStatus(String.format("%s: %d", "matches parsed", this.matchesParsed), false);
+            reportStatus(String.format("%s: %d", "matches parsed", this.matchesParsed), false, false);
         }
         for (Match match : errorList) {
             matchList.remove(match);
@@ -236,29 +236,42 @@ public class APIInterface {
         return snap;
     }
 
-    public void reportStatus(String status, boolean last) {
+    public String getPlayerName(String playerID) {
+        JSONParser parser = new JSONParser();
+        String playerJSON = getHTML(
+                String.format("https://gameinfo.albiononline.com/api/gameinfo/players/%s", playerID));
+        try {
+            JSONObject player = (JSONObject) parser.parse(playerJSON);
+            return player.get("Name").toString();
+        } catch (ParseException pe) {
+            reportStatus(pe + " (player parse error)", true, false);
+            return null;
+        }
+    }
+
+    public void reportStatus(String status, boolean error, boolean last) {
         String newReport;
         if (lastReport == null) {
             newReport = status;
-        } else if (status.contains("matches parsed")) {
-            if (lastReport.contains("matches parsed")) {
-                newReport = status;
-            } else {
-                System.out.println(lastReport);
-                newReport = status;
-            }
-        } else if (lastReport.contains(status)) {
+        } else if (error && lastReport.contains(status)) {
             if (lastReport.contains(": ")) {
                 int statusCount = Integer.parseInt(lastReport.split(": ")[1]);
                 newReport = String.format("%s: %d", status, statusCount + 1);
             } else {
                 newReport = String.format("%s: 2", status);
             }
+        } else if (!error) {
+            if (lastReport.contains(status.split(":")[0])) {
+                newReport = status;
+            } else {
+                System.out.println(lastReport);
+                newReport = status;
+            }
         } else {
             System.out.println(lastReport);
             newReport = status;
         }
-        if (last){
+        if (last) {
             System.out.println(newReport);
         } else {
             System.out.print(newReport + "\r");
