@@ -17,6 +17,7 @@ public class Driver {
             APIInterface apiInterface = new APIInterface();
             DBInterface dbInterface = new DBInterface();
             ArrayList<String> matchIDs = dbInterface.getParsedMatchIDs();
+            System.out.println(matchIDs.get(0));
             ArrayList<Match> matchList = apiInterface.getMatches(offset, limit, matchIDs);
             try {
                 dbInterface.addMatches(matchList);

@@ -4,8 +4,6 @@ package albstat;
 // 6/12/20
 // for interfacing api requests and processing with the database
 
-//INSERT INTO `albstat`.`match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES ('test', 'test', ?, 'test', 'test');
-
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -19,8 +17,9 @@ public class DBInterface {
     }
 
     public static Connection connect() throws SQLException, SQLTimeoutException {
+        DBCredentials credentials = new DBCredentials();
         System.out.println("database connection established");
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", "root", "mymySQL.Dragons19!");
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", credentials.getUser(), credentials.getPass());
     }
 
     public void uncommit() throws SQLException {
