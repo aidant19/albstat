@@ -5,16 +5,23 @@ package albstat;
 // timestamp converter for albion online
 
 public class Timestamp {
-    // takes in YYYY-MM-DDTHH:MM:SS.SSSSSSSSS (9 decimal places)
 
     public int[] date;
     public double[] time;
 
     public Timestamp(String timestampString) {
+        // this constructor can use both the albion format and the db format
+        // albion format separates Date, Time with a 'T' (ASCII 84)
+        // db format separates Data, Time with a ' ' (ASCII 32)
         this.date = new int[3];
         this.time = new double[3];
         timestampString = timestampString.replace("Z", "");
-        String[] dateTimeStrings = timestampString.split("T");
+        String[] dateTimeStrings;
+        if (timestampString.contains("T")){
+            dateTimeStrings = timestampString.split("T");
+        } else {
+            dateTimeStrings = timestampString.split(" ");
+        }
         String dateString = dateTimeStrings[0];
         String timeString = dateTimeStrings[1];
         String[] dateStrings = dateString.split("-");
@@ -36,7 +43,6 @@ public class Timestamp {
     }
 
     public boolean isAfter(Timestamp time) {
-
         if (this.date[0] != time.date[0]) {
             if (this.date[0] < time.date[0]) {
                 return false;
@@ -56,7 +62,6 @@ public class Timestamp {
                 return true;
             }
         }
-
         if (this.time[0] != time.time[0]) {
             if (this.time[0] < time.time[0]) {
                 return false;
@@ -80,7 +85,6 @@ public class Timestamp {
     }
 
     public boolean isBefore(Timestamp time) {
-
         if (this.date[0] != time.date[0]) {
             if (this.date[0] > time.date[0]) {
                 return false;
@@ -100,7 +104,6 @@ public class Timestamp {
                 return true;
             }
         }
-
         if (this.time[0] != time.time[0]) {
             if (this.time[0] > time.time[0]) {
                 return false;
@@ -124,6 +127,7 @@ public class Timestamp {
     }
 
     public String toString(){
+        // returns this object in the db format
         return String.format("%d-%d-%d %.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0], this.time[1], this.time[2]);
     }
 }

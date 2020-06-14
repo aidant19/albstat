@@ -15,6 +15,7 @@ public class DBCredentials {
     private String pass;
 
     public DBCredentials(){
+        // this constructor assumes you have placed a cred.txt file in the proper location
         readCred();
     }
 

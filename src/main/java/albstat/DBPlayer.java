@@ -6,6 +6,7 @@ package albstat;
 
 public class DBPlayer{
 
+    // db fields
     public String player_id;
     public String player_name;
 
@@ -20,10 +21,12 @@ public class DBPlayer{
     }
 
     public void setName(String n){
+        // for use with the api interface
         this.player_name = n;
     }
 
     public String toString(){
+        // returns this object as the db fields specified in the player table
         return String.format("('%s', '%s')", player_id, player_name); 
     }
 }

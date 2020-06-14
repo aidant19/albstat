@@ -244,7 +244,20 @@ public class APIInterface {
             JSONObject player = (JSONObject) parser.parse(playerJSON);
             return player.get("Name").toString();
         } catch (ParseException pe) {
-            reportStatus(pe + " (player parse error)", true, false);
+            reportStatus(pe + " (player name error)", true, false);
+            return null;
+        }
+    }
+
+    public String getItemName(String item_type){
+        JSONParser parser = new JSONParser();
+        String itemJSON = getHTML(
+                String.format("https://gameinfo.albiononline.com/api/gameinfo/items/T4_%s/data", item_type));
+        try {
+            JSONObject item = (JSONObject) parser.parse(itemJSON);
+            return ((JSONObject) item.get("localizedNames")).get("EN-US").toString();
+        } catch (ParseException pe) {
+            reportStatus(pe + " (item name error)", true, false);
             return null;
         }
     }
