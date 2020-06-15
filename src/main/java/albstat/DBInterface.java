@@ -13,22 +13,30 @@ public class DBInterface {
     // note: the connection is unique to each DBInterface instance
     // multi-threading requires multiple DBInterfaces
 
-    public DBInterface() throws SQLException, SQLTimeoutException {
+    public DBInterface() {
         // by default, this constructor creates a connection requiring commits
         this.con = connect();
-        this.con.setAutoCommit(false);
     }
 
-    public static Connection connect() throws SQLException, SQLTimeoutException {
+    public static Connection connect() {
+        // note: the connection is setup to require commits
         DBCredentials credentials = new DBCredentials();
-        System.out.println("database connection established");
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", credentials.getUser(),
-                credentials.getPass());
+        Connection con;
+        try {
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", credentials.getUser(),
+                    credentials.getPass());
+            con.setAutoCommit(false);
+            System.out.println("database connection established");
+            return con;
+        } catch (SQLException e) {
+            System.out.println("could not connect to database");
+            return null;
+        }
     }
 
     public void rollbackClose() throws SQLException {
-        // note that a close would accomplish the same goal;
-        // the redundancy is used as a reminder
+        // note that just a close would accomplish the same goal;
+        // the redundancy is used as a reminder of both actions occuring
         con.rollback();
         con.close();
     }
@@ -101,7 +109,8 @@ public class DBInterface {
     }
 
     public ArrayList<DBPlayer> getUnnamedPlayers() throws SQLException {
-        // returns a list of players who appear in the snapshot table, but not the player table
+        // returns a list of players who appear in the snapshot table, but not the
+        // player table
         // for use with the api in retrieving player names
         ArrayList<DBPlayer> players = new ArrayList<>();
         Statement stmt = con.createStatement();
@@ -135,7 +144,8 @@ public class DBInterface {
     }
 
     public ArrayList<DBItem> getUnnamedItems(String item_class) throws SQLException {
-        // returns a list of items which appear in the snapshot table, but not any item table
+        // returns a list of items which appear in the snapshot table, but not any item
+        // table
         // for use with the api in retrieving item names
         ArrayList<DBItem> items = new ArrayList<>();
         Statement stmt = con.createStatement();
@@ -172,7 +182,8 @@ public class DBInterface {
     }
 
     public void updateSnapshots() throws SQLException {
-        // this function is deprecated, for converting snapshots from the old version to the new
+        // this function is deprecated, for converting snapshots from the old version to
+        // the new
         Statement stmt = con.createStatement();
         Statement stmt2 = con.createStatement();
         ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM snapshot_old");
