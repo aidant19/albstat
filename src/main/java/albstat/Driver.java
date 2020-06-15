@@ -15,14 +15,14 @@ public class Driver {
             APIInterface apiInterface = new APIInterface();
             DBInterface dbInterface = new DBInterface();
             ArrayList<String> matchIDs = dbInterface.getParsedMatchIDs();
-            ArrayList<Match> matchList = apiInterface.getMatches(offset, limit, matchIDs);
+            /* ArrayList<Match> matchList = apiInterface.getNewMatches(offset, limit, matchIDs);
             try {
                 dbInterface.addMatches(matchList);
                 dbInterface.commitClose();
             } catch (SQLException e) {
                 System.out.println(e);
                 dbInterface.rollbackClose();
-            }
+            } */
         }
     }
 
@@ -81,6 +81,7 @@ public class Driver {
     }
 
     public static void main(String[] args) throws Exception {
-        getNewMatches(10, 0, 10);
+        DataBuilder builder = new DataBuilder();
+        builder.getNewMatches(0, 5, 5);
     }
 }

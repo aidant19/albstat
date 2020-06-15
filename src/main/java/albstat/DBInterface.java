@@ -54,13 +54,18 @@ public class DBInterface {
         con.commit();
     }
 
-    public ArrayList<String> getParsedMatchIDs() throws SQLException {
+    public ArrayList<String> getParsedMatchIDs() {
         // returns previously parsed matches for use with new api interface instances
         ArrayList<String> matchIDs = new ArrayList<String>();
-        Statement stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT `match_id` FROM `match`");
-        while (rs.next()) {
-            matchIDs.add(rs.getString(1));
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT `match_id` FROM `match`");
+            while (rs.next()) {
+                matchIDs.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.out.println("error retrieving parsed matches");
+            System.out.println(e);
         }
         return matchIDs;
     }

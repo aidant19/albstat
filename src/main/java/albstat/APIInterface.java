@@ -26,13 +26,11 @@ public class APIInterface {
         this.duplicates = 0;
     }
 
-    public ArrayList<Match> getMatches(int offset, int limit, ArrayList<String> matchIDs) {
-        System.out.printf("sending api match request: offset=%d, limit=%d\n", offset, limit);
+    public String getNewMatches(int offset, int limit) {
         String URL = String.format(
                 "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
                 offset);
-        String rawJSON = getHTML(URL);
-        return parseMatches(rawJSON, matchIDs);
+        return getHTML(URL);
     }
 
     public String getHTML(String urlToRead) {
@@ -59,9 +57,8 @@ public class APIInterface {
         ArrayList<Match> matchList = new ArrayList<Match>();
         JSONParser parser = new JSONParser();
         try {
-            Object obj = parser.parse(rawJSON);
-            JSONArray array = (JSONArray) obj;
-            for (Object matchObj : array) {
+            JSONArray rawMatchArray = (JSONArray) parser.parse(rawJSON);
+            for (Object matchObj : rawMatchArray) {
                 JSONObject match = (JSONObject) matchObj;
                 if (Integer.parseInt(match.get("crystalLeagueLevel").toString()) == 1) {
                     continue;
