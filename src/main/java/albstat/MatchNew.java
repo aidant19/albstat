@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class MatchNew extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
-    private static final int FIELDS = 7;
+    private static final int FIELDS = 5;
 
     // underlying datasets
     private ArrayList<JSONDefinedMap> subMaps;
@@ -31,9 +31,8 @@ public class MatchNew extends JSONDefinedMap {
         jsonMap.put(new String[] { "winner" }, keys[2] = "winner");
         jsonMap.put(new String[] { "startTime" }, keys[3] = "timeStart");
         jsonMap.put(new String[] { "team1Timeline", ":last", "TimeStamp" }, keys[4] = "timeEnd");
-        jsonMap.put(new String[] { "team1Results", "keySet" }, keys[5] = "team1IDs");
-        jsonMap.put(new String[] { "team2Results", "keySet" }, keys[6] = "team2IDs");
-        setSubMapping();
+        this.subMaps = new ArrayList<>();
+        //setSubMapping();
     }
 
     protected void setSubMapping() {
