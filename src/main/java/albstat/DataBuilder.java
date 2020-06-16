@@ -32,9 +32,16 @@ public class DataBuilder {
             System.out.printf("requesting %d matches, offset %d from api\n", batchSize, offset);
             jsonHandler.loadArray(apiInterface.getNewMatches(offset, batchSize));
             System.out.println("matches retrieved, parsing matches");
-            MatchNew match = new MatchNew();
-            jsonHandler.mapTo(match);
-            System.out.println(match);
+            ArrayList<MatchNew> matchList = new ArrayList<>();
+            for (int i = 0; i < batchSize; i++) {
+                MatchNew match = new MatchNew();
+                jsonHandler.mapTo(match);
+                System.out.println(match);
+                /*
+                    for (JSONDefinedMap subMap : match.getSubMaps()) {
+                    System.out.println(subMap);
+                } */
+            }
         }
     }
 }

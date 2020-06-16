@@ -7,6 +7,7 @@ package albstat;
 import java.util.Map;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.Iterator;
 
@@ -45,8 +46,21 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
     // used to set the mapping of JSON locations to keys in the base map
     // also sets the keys in this map
 
+    protected void setSubMapping(){}
+    // by default does not perform any submapping
+
     public String[] getJSONAddress(String key){
         return jsonMap.get(key);
+    }
+
+    public JSONDefinedMap getSubMap(int index){
+        // by default assumes that there are no sub maps
+        return null;
+    }
+
+    public ArrayList<JSONDefinedMap> getSubMaps(){
+        // by default assumes that there are no sub maps
+        return null;
     }
 
     public Set<Entry<String, String>> entrySet() {

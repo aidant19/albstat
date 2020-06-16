@@ -19,8 +19,9 @@ public class JSONHandler {
     private JSONParser parser;
 
     // loadable objects
-    private JSONArray loadedArray; // extends List
-    private JSONObject loadedObject; // extends Map
+    private JSONArray loadedArray; // extended List
+    private JSONObject baseObject; // extended Map
+    private JSONObject loadedObject; // extended Map
 
     public JSONHandler() {
         this.parser = new JSONParser();
@@ -30,7 +31,8 @@ public class JSONHandler {
         // loads a JSONArray and its first object parsed from a string
         try {
             loadedArray = (JSONArray) parser.parse(rawJSON);
-            loadedObject = (JSONObject) loadedArray.get(0);
+            baseObject = (JSONObject) loadedArray.get(0);
+            loadedObject = baseObject;
         } catch (ParseException e) {
             System.out.println(e);
             System.exit(0);
@@ -40,22 +42,38 @@ public class JSONHandler {
     public void loadObject(String rawJSON) {
         // loads a JSONObject parsed from a string
         try {
-            loadedObject = (JSONObject) parser.parse(rawJSON);
+            baseObject = (JSONObject) parser.parse(rawJSON);
+            loadedObject = baseObject;
         } catch (ParseException e) {
             System.out.println(e);
             System.exit(0);
         }
     }
 
+    public void loadSubObject(String key){
+        // loads a JSONObject stored within the top level object
+        loadedObject = (JSONObject) loadedObject.get(key);
+    }
+
+    public void loadBaseObject(){
+        // loads the top level object
+        loadedObject = baseObject;
+    }
+
     public boolean loadNextObject() {
         // loads the next JSONObject in the loaded array
         // returns false if there is not next object
         try {
-            loadedObject = (JSONObject) loadedArray.iterator().next();
+            baseObject = (JSONObject) loadedArray.iterator().next();
+            loadedObject = baseObject;
             return true;
         } catch (NullPointerException e) {
             return false;
         }
+    }
+
+    public JSONObject getObject(String key){
+        return (JSONObject) loadedObject.get("key");
     }
 
     public String getValue(String key) {
@@ -82,6 +100,16 @@ public class JSONHandler {
                             JSONArray tempArray = (JSONArray) current;
                             current = tempArray.get(Integer.parseInt(address[i].substring(1)));
                         }
+                    } else if (address[i].contains("keySet")) {
+                        Set<String> keySet = ((JSONObject) current).keySet();
+                        int counter = 0;
+                        int index = Integer.parseInt(address[i].substring(6));
+                        for (String key : keySet) {
+                            if(index == counter){
+                                current = ((JSONObject) current).get(keySet.remove(key));
+                                break;
+                            }
+                        }
                     } else {
                         current = ((JSONObject) current).get(address[i]);
                     }
@@ -94,9 +122,16 @@ public class JSONHandler {
     }
 
     public void mapTo(JSONDefinedMap map) {
+        // maps the loaded object to values addressed by a JSONDefinedMap
         Set<String> keys = map.keySet();
         for (String key : keys) {
             map.replace(key, getValueFromChain(map.getJSONAddress(key)));
+        }
+        for (JSONDefinedMap subMap : map.getSubMaps()){
+            keys = subMap.keySet();
+            for (String key : keys) {
+                map.replace(key, getValueFromChain(map.getJSONAddress(key)));
+            }
         }
     }
 }
