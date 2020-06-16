@@ -34,6 +34,7 @@ public class DataBuilder {
             System.out.println("matches retrieved, parsing matches");
             MatchNew match = new MatchNew();
             jsonHandler.mapTo(match);
+            System.out.println(match);
         }
     }
 }

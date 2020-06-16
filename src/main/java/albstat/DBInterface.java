@@ -30,6 +30,7 @@ public class DBInterface {
             return con;
         } catch (SQLException e) {
             System.out.println("could not connect to database");
+            System.exit(0);
             return null;
         }
     }

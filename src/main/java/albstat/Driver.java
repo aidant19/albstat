@@ -82,6 +82,6 @@ public class Driver {
 
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
-        builder.getNewMatches(0, 5, 5);
+        builder.getNewMatches(0, 1, 1);
     }
 }

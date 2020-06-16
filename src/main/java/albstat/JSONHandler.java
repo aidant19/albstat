@@ -4,8 +4,8 @@ package albstat;
 // 6/14/20
 // module for handling JSON using the simple JSON parser
 
-// util
-import java.util.Map;
+
+import java.util.Set;
 
 // simple json modules
 import org.json.simple.JSONObject;
@@ -37,7 +37,7 @@ public class JSONHandler {
         }
     }
 
-    public void loadObject(String rawJSON){
+    public void loadObject(String rawJSON) {
         // loads a JSONObject parsed from a string
         try {
             loadedObject = (JSONObject) parser.parse(rawJSON);
@@ -63,23 +63,40 @@ public class JSONHandler {
         return loadedObject.get(key).toString();
     }
 
-    public String getValueFromChain(String[] keyChain) {
+    public String getValueFromChain(String[] address) {
         // for getting values from a chain of nested objects
         // returns the String form of a key value
         // returns null if it cannot find the key
         try {
-            JSONObject object = new JSONObject();
-            int i;
-            for (i = 0; i < keyChain.length - 2; i++) {
-                object = (JSONObject) loadedObject.get(keyChain[i]);
+            if (address.length == 1) {
+                return loadedObject.get(address[0]).toString();
+            } else {
+                Object current = loadedObject.get(address[0]);
+                int i;
+                for (i = 1; i < address.length - 1; i++) {
+                    if(address[i].contains(":")){
+                        if(address[i].contains("last")){
+                            JSONArray tempArray = (JSONArray) current;
+                            current = tempArray.get(tempArray.size() - 1);
+                        } else {
+                            JSONArray tempArray = (JSONArray) current;
+                            current = tempArray.get(Integer.parseInt(address[i].substring(1)));
+                        }
+                    } else {
+                        current = ((JSONObject) current).get(address[i]);
+                    }
+                }
+                return ((JSONObject) current).get(address[address.length - 1]).toString();
             }
-            return object.get(keyChain[i + 1]).toString();
         } catch (NullPointerException e) {
             return null;
         }
     }
 
-    public void mapTo(Map map){
-        
+    public void mapTo(JSONDefinedMap map) {
+        Set<String> keys = map.keySet();
+        for (String key : keys) {
+            map.replace(key, getValueFromChain(map.getJSONAddress(key)));
+        }
     }
 }

@@ -2,70 +2,42 @@ package albstat;
 
 // aidan tokarski
 // 6/15/20
-// a class for containing
+// a class for containing match data
 
 import java.util.Map;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-public class MatchNew extends AbstractMap<String, String> {
+public class MatchNew extends JSONDefinedMap {
 
+    // defines the amount of fields in this Map
+    private static final int FIELDS = 5;
+
+    // underlying datasets
     public Set<String> team1Players;
     public Set<String> team2Players;
     public ArrayList<Event> events;
-    public MatchResult results;
+    private MatchResult results;
 
-    public MatchNew() {}
+    public MatchNew() {
+        super(FIELDS);
+    }
 
     public MatchNew(Map<String, String> map) {
-        for (Entry<String, String> entry: map.entrySet()) {
-            this.replace(entry.getKey(), entry.getValue());
-        }
+        super(map, FIELDS);
     }
 
-    public Set<Entry<String, String>> entrySet() {
-        return new EntrySet();
+    protected void setMapping(){
+        // maps fields from the api (JSON) to fields in the map
+        this.jsonMap = new JSONMap(FIELDS);
+        jsonMap.put(new String[] {"MatchId"}, keys[0] = "matchID");
+        jsonMap.put(new String[] {"crystalLeagueLevel"}, keys[1] = "level");
+        jsonMap.put(new String[] {"winner"}, keys[2] = "winner");
+        jsonMap.put(new String[] {"startTime"}, keys[3] = "timeStart");
+        jsonMap.put(new String[] {"team1Timeline", ":last", "TimeStamp"}, keys[4] = "timeEnd");
     }
 
-    final class EntrySet extends AbstractSet<Map.Entry<String, String>> {
-
-        private String[] keys = { "matchID", "level", "winner", "timeStart", "timeEnd" };
-
-        public final int size() {
-            return 5;
-        }
-
-        public Iterator<Entry<String, String>> iterator() {
-            return new EntryIterator();
-        }
-
-		final class EntryIterator implements Iterator<Map.Entry<String, String>> {
-
-            private int index;
-
-            EntryIterator() {
-                this.index = 0;
-            }
-
-            public final Entry<String, String> next() {
-                return new SimpleEntry<String, String>(keys[index++], null);
-            }
-
-            public final boolean hasNext() {
-                return index != 4;
-            }
-        }
-    }
-
-    public void addEvent(Event e) {
-        e.setMatchID(this.get("matchID"));
-        this.events.add(e);
-    }
-
-    public int verifyData() {
+    public int verifyData(){
         return DataVerifier.verifyData(events, results);
     }
 }
