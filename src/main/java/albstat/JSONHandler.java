@@ -91,7 +91,7 @@ public class JSONHandler {
             } else {
                 Object current = loadedObject.get(address[0]);
                 int i;
-                for (i = 1; i < address.length - 1; i++) {
+                for (i = 1; i < address.length; i++) {
                     if(address[i].contains(":")){
                         if(address[i].contains("last")){
                             JSONArray tempArray = (JSONArray) current;
@@ -106,15 +106,16 @@ public class JSONHandler {
                         int index = Integer.parseInt(address[i].substring(6));
                         for (String key : keySet) {
                             if(index == counter){
-                                current = ((JSONObject) current).get(keySet.remove(key));
+                                current = key;
                                 break;
                             }
+                            counter++;
                         }
                     } else {
                         current = ((JSONObject) current).get(address[i]);
                     }
                 }
-                return ((JSONObject) current).get(address[address.length - 1]).toString();
+                return current.toString();
             }
         } catch (NullPointerException e) {
             return null;
@@ -125,12 +126,12 @@ public class JSONHandler {
         // maps the loaded object to values addressed by a JSONDefinedMap
         Set<String> keys = map.keySet();
         for (String key : keys) {
-            map.replace(key, getValueFromChain(map.getJSONAddress(key)));
+            map.put(key, getValueFromChain(map.getJSONAddress(key)));
         }
         for (JSONDefinedMap subMap : map.getSubMaps()){
             keys = subMap.keySet();
             for (String key : keys) {
-                map.replace(key, getValueFromChain(map.getJSONAddress(key)));
+                subMap.put(key, getValueFromChain(subMap.getJSONAddress(key)));
             }
         }
     }

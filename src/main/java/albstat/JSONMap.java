@@ -12,44 +12,33 @@ import java.util.Iterator;
 
 public class JSONMap extends AbstractMap<String, String[]> {
 
-    EntrySet mappings;
+    private int size;
+    private int entryCount;
+    private String[] keyNames; // name of the key the address maps to
+    private String[][] Addresses; // JSON address
 
     public JSONMap(int size) {
-        this.mappings = new EntrySet(size);
+        this.size = size;
+        this.entryCount = 0;
+        this.Addresses = new String[size][];
+        this.keyNames = new String[size];
     }
 
-    public String put(String[] address, String keyName) {
-        mappings.add(address, keyName);
-        return null;
+    public boolean add(String[] address, String keyName) {
+        Addresses[entryCount] = address;
+        keyNames[entryCount] = keyName;
+        entryCount++;
+        return true;
     }
 
     public Set<Entry<String, String[]>> entrySet() {
-        return mappings;
+        return new EntrySet();
     }
 
     final class EntrySet extends AbstractSet<Map.Entry<String, String[]>> {
 
-        private int size;
-        private int entryCount;
-        private String[] keyNames; // name of the key the address maps to
-        private String[][] Addresses; // JSON address
-
-        public EntrySet(int size) {
-            this.size = size;
-            this.entryCount = 0;
-            this.Addresses = new String[size][];
-            this.keyNames = new String[size];
-        }
-
         public final int size() {
             return size;
-        }
-
-        public boolean add(String[] address, String keyName) {
-            Addresses[entryCount] = address;
-            keyNames[entryCount] = keyName;
-            entryCount++;
-            return true;
         }
 
         public Iterator<Entry<String, String[]>> iterator() {

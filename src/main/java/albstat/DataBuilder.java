@@ -37,11 +37,14 @@ public class DataBuilder {
                 MatchNew match = new MatchNew();
                 jsonHandler.mapTo(match);
                 System.out.println(match);
-                /*
                     for (JSONDefinedMap subMap : match.getSubMaps()) {
                     System.out.println(subMap);
-                } */
+                }
             }
         }
+    }
+    public static void main(String[] args) throws Exception {
+        DataBuilder builder = new DataBuilder();
+        builder.getNewMatches(0, 1, 1);
     }
 }

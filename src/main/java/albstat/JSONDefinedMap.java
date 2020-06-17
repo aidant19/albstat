@@ -25,12 +25,6 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
         this.size = size;
         values = new String[size];
         keys = new String[size];
-        setMapping();
-    }
-
-    protected JSONDefinedMap(Map<String, String> map, int size){
-        this(size);
-        putAll(map);
     }
 
     public String put(String key, String newValue){
