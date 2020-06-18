@@ -26,13 +26,6 @@ public class APIInterface {
         this.duplicates = 0;
     }
 
-    public String getNewMatches(int offset, int limit) {
-        String URL = String.format(
-                "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
-                offset);
-        return getHTML(URL);
-    }
-
     public String getHTML(String urlToRead) {
         try {
             StringBuilder result = new StringBuilder();
@@ -50,6 +43,19 @@ public class APIInterface {
             reportStatus("API Failure", true, false);
             return getHTML(urlToRead);
         }
+    }
+
+    public String getNewMatches(int offset, int limit) {
+        String URL = String.format(
+                "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
+                offset);
+        return getHTML(URL);
+    }
+
+    public String getEventHistory(String player1, String player2) {
+        String URL = String.format("https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s", player1,
+                player2);
+        return getHTML(URL);
     }
 
     public ArrayList<Match> parseMatches(String rawJSON, ArrayList<String> matchIDs) {
@@ -246,7 +252,7 @@ public class APIInterface {
         }
     }
 
-    public String getItemName(String item_type){
+    public String getItemName(String item_type) {
         JSONParser parser = new JSONParser();
         String itemJSON = getHTML(
                 String.format("https://gameinfo.albiononline.com/api/gameinfo/items/T4_%s/data", item_type));

@@ -4,7 +4,6 @@ package albstat;
 // 6/15/20
 // defines a basic Map which contains a JSONMap
 
-import java.util.Map;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
@@ -21,15 +20,19 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
     protected String[] values;
     protected int size;
 
-    protected JSONDefinedMap(int size){
+    // sub maps
+    protected ArrayList<JSONDefinedMap> subMaps;
+
+    protected JSONDefinedMap(int size) {
         this.size = size;
         values = new String[size];
         keys = new String[size];
+        subMaps = new ArrayList<>(0);
     }
 
-    public String put(String key, String newValue){
-        for(int i = 0; i < size; i++){
-            if(keys[i].compareTo(key) == 0){
+    public String put(String key, String newValue) {
+        for (int i = 0; i < size; i++) {
+            if (keys[i].compareTo(key) == 0) {
                 values[i] = newValue;
             }
         }
@@ -40,21 +43,27 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
     // used to set the mapping of JSON locations to keys in the base map
     // also sets the keys in this map
 
-    protected void setSubMapping(){}
+    protected void setSubMapping() {}
     // by default does not perform any submapping
 
-    public String[] getJSONAddress(String key){
+    public String[] getJSONAddress(String key) {
         return jsonMap.get(key);
     }
 
-    public JSONDefinedMap getSubMap(int index){
-        // by default assumes that there are no sub maps
+    public JSONMap getJSONMap(){
+        return jsonMap;
+    }
+
+    public JSONDefinedMap getSubMap(int index) {
         return null;
     }
 
-    public ArrayList<JSONDefinedMap> getSubMaps(){
-        // by default assumes that there are no sub maps
-        return null;
+    public ArrayList<JSONDefinedMap> getSubMaps() {
+        if (this.subMaps.size() == 0) {
+            return new ArrayList<>(0);
+        } else {
+            return this.subMaps;
+        }
     }
 
     public Set<Entry<String, String>> entrySet() {
@@ -71,7 +80,7 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
             return new EntryIterator();
         }
 
-		final class EntryIterator implements Iterator<Entry<String, String>> {
+        final class EntryIterator implements Iterator<Entry<String, String>> {
 
             private int index;
 
@@ -91,7 +100,7 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
         }
     }
 
-    public String toString(){
+    public String toString() {
         String toString = "(";
         for (String value : values) {
             toString += String.format("'%s',", value);

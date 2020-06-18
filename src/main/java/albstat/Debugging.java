@@ -1,12 +1,13 @@
 package albstat;
 
 import java.util.ArrayList;
+import java.util.Map.Entry;
 
 // aidan tokarski
 // 6/14/20
 // a class for bulding and handling data from the albion api as outlined by the albstat database
 
-public class DataBuilder {
+public class Debugging {
 
     // interface instances
     private APIInterface apiInterface;
@@ -14,7 +15,7 @@ public class DataBuilder {
     private JSONHandler jsonHandler;
     private APIInterfaceCached apiInterfaceCached;
 
-    public DataBuilder() {
+    public Debugging() {
         this.apiInterface = new APIInterface();
         this.dbInterface = new DBInterface();
         this.jsonHandler = new JSONHandler();
@@ -68,6 +69,7 @@ public class DataBuilder {
                         if (new Timestamp(eventHandler.getValue("TimeStamp")).isBetween(match.get("timeStart"),
                                 match.get("timeEnd"))) {
                             addSnapshots(match, eventHandler);
+                            return;
                         }
                     } while (eventHandler.loadNextObject());
                 }
@@ -82,7 +84,7 @@ public class DataBuilder {
         SnapshotNew nextSnap = new SnapshotNew(1, 0);
         eventHandler.mapTo(nextSnap);
         match.addSubMapping(nextSnap);
-        // create victim snapshot
+/*         // create victim snapshot
         nextSnap = new SnapshotNew(2, 0);
         eventHandler.mapTo(nextSnap);
         match.addSubMapping(nextSnap);
@@ -97,11 +99,18 @@ public class DataBuilder {
             nextSnap = new SnapshotNew(4, i);
             eventHandler.mapTo(nextSnap);
             match.addSubMapping(nextSnap);
-        }
+        } */
     }
 
     public static void main(String[] args) throws Exception {
-        DataBuilder builder = new DataBuilder();
-        builder.getNewMatches(0, 1, 1);
+        JSONHandler jsonHandler = new JSONHandler();
+        APIInterfaceCached apiInterface = new APIInterfaceCached();
+        String eventJSON = apiInterface.getEventHistory("3N4psRbsRy-7Kyy8qfAEHw", "cENkabV8RteTCxAHr1YLwg");
+        SnapshotNew newSnap = new SnapshotNew(1, 0);
+        JSONMap snapMap = newSnap.getJSONMap();
+        jsonHandler.loadArray(eventJSON);
+        for (Entry entry : snapMap.entrySet()) {
+            System.out.println(entry.getKey());
+        }
     }
 }

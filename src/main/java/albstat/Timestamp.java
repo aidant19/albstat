@@ -42,6 +42,12 @@ public class Timestamp {
         }
     }
 
+    public boolean isBetween(String time1String, String time2String){
+        Timestamp time1 = new Timestamp(time1String);
+        Timestamp time2 = new Timestamp(time2String);
+        return isBetween(time1, time2);
+    }
+
     public boolean isAfter(Timestamp time) {
         if (this.date[0] != time.date[0]) {
             if (this.date[0] < time.date[0]) {

@@ -4,16 +4,12 @@ package albstat;
 // 6/15/20
 // a class for containing match data
 
-import java.util.Map;
 import java.util.ArrayList;
 
 public class MatchNew extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
     private static final int FIELDS = 5;
-
-    // underlying datasets
-    private ArrayList<JSONDefinedMap> subMaps;
 
     public MatchNew() {
         super(FIELDS);
@@ -28,7 +24,6 @@ public class MatchNew extends JSONDefinedMap {
         jsonMap.add(new String[] { "winner" }, keys[2] = "winner");
         jsonMap.add(new String[] { "startTime" }, keys[3] = "timeStart");
         jsonMap.add(new String[] { "team1Timeline", ":last", "TimeStamp" }, keys[4] = "timeEnd");
-        this.subMaps = new ArrayList<>();
         setSubMapping();
     }
 
@@ -36,6 +31,10 @@ public class MatchNew extends JSONDefinedMap {
         for (int i = 0; i < 10; i++) {
             subMaps.add(new PlayerNew(i));
         }
+    }
+
+    public void addSubMapping(JSONDefinedMap m) {
+        subMaps.add(m);
     }
 
     public JSONDefinedMap getSubMap(int index) {

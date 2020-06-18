@@ -1,2 +1,4 @@
 target/
 cred.txt
+event_cache.txt
+match_cache.txt

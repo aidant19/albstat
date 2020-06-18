@@ -79,9 +79,10 @@ public class Driver {
         dbInterface.updateSnapshots();
         dbInterface.commitClose();
     }
-
+/* 
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
         builder.getNewMatches(0, 1, 1);
     }
+*/
 }
