@@ -13,17 +13,26 @@ public class MatchNew extends JSONDefinedMap {
 
     public MatchNew() {
         super(FIELDS);
+        setKeys();
         setMapping();
+    }
+
+    protected void setKeys() {
+        keys[0] = "matchID";
+        keys[1] = "level";
+        keys[2] = "winner";
+        keys[3] = "timeStart";
+        keys[4] = "timeEnd";
     }
 
     protected void setMapping() {
         // maps fields from the api (JSON) to fields in the map
         this.jsonMap = new JSONMap(FIELDS);
-        jsonMap.add(new String[] { "MatchId" }, keys[0] = "matchID");
-        jsonMap.add(new String[] { "crystalLeagueLevel" }, keys[1] = "level");
-        jsonMap.add(new String[] { "winner" }, keys[2] = "winner");
-        jsonMap.add(new String[] { "startTime" }, keys[3] = "timeStart");
-        jsonMap.add(new String[] { "team1Timeline", ":last", "TimeStamp" }, keys[4] = "timeEnd");
+        jsonMap.add(new String[] { "MatchId" }, keys[0]);
+        jsonMap.add(new String[] { "crystalLeagueLevel" }, keys[1]);
+        jsonMap.add(new String[] { "winner" }, keys[2]);
+        jsonMap.add(new String[] { "startTime" }, keys[3]);
+        jsonMap.add(new String[] { "team1Timeline", ":last", "TimeStamp" }, keys[4]);
         setSubMapping();
     }
 

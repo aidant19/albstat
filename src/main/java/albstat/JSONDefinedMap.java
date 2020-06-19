@@ -39,9 +39,11 @@ public abstract class JSONDefinedMap extends AbstractMap<String, String> {
         return null;
     }
 
+    protected abstract void setKeys();
+    // used to set the mapping of keys
+
     protected abstract void setMapping();
     // used to set the mapping of JSON locations to keys in the base map
-    // also sets the keys in this map
 
     protected void setSubMapping() {}
     // by default does not perform any submapping
