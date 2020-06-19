@@ -36,7 +36,7 @@ public class DataBuilder {
             jsonHandler.loadArray(matchJSON);
             System.out.println("matches retrieved, parsing matches");
             for (int i = 0; i < batchSize; i++) {
-                MatchNew match = new MatchNew();
+                Match match = new Match();
                 jsonHandler.mapTo(match);
                 if (match.get("level").compareTo("1") == 0) {
                     System.out.println("level 1 match found");
@@ -49,7 +49,7 @@ public class DataBuilder {
         }
     }
 
-    public void getEvents(MatchNew match) {
+    public void getEvents(Match match) {
         // retrieves the event history for all player combinations then finds events
         // which occurred in the timeframe of the match
         JSONHandler eventHandler = new JSONHandler();
@@ -69,32 +69,32 @@ public class DataBuilder {
         }
     }
 
-    public void getSnapshots(MatchNew match, JSONHandler eventHandler) {
+    public void getSnapshots(Match match, JSONHandler eventHandler) {
         int nParticipants = Integer.parseInt(eventHandler.getValue("numberOfParticipants"));
         int nGroupMembers = Integer.parseInt(eventHandler.getValue("groupMemberCount"));
         // create killer snapshot
-        SnapshotNew nextSnap = new SnapshotNew(1, 0);
+        Snapshot nextSnap = new Snapshot(1, 0);
         eventHandler.mapTo(nextSnap);
         match.addSubMapping(nextSnap);
         // create victim snapshot
-        nextSnap = new SnapshotNew(2, 0);
+        nextSnap = new Snapshot(2, 0);
         eventHandler.mapTo(nextSnap);
         match.addSubMapping(nextSnap);
         // create group member snapshots
         for (int i = 0; i < nGroupMembers; i++) {
-            nextSnap = new SnapshotNew(3, i);
+            nextSnap = new Snapshot(3, i);
             eventHandler.mapTo(nextSnap);
             match.addSubMapping(nextSnap);
         }
         // create participant snapshots
         for (int i = 0; i < nParticipants; i++) {
-            nextSnap = new SnapshotNew(4, i);
+            nextSnap = new Snapshot(4, i);
             eventHandler.mapTo(nextSnap);
             match.addSubMapping(nextSnap);
         }
     }
 
-    public void addMatchToDB(MatchNew match) {
+    public void addMatchToDB(Match match) {
         int nextID = dbInterface.getNextMatchPlayerID();
         // sub maps 0-9 reserved for players
         // sub maps 10+ reserved for snapshots

@@ -6,7 +6,7 @@ package albstat;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-public class SnapshotNew extends JSONDefinedMap {
+public class Snapshot extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
     private static final int FIELDS = 22;
@@ -20,7 +20,7 @@ public class SnapshotNew extends JSONDefinedMap {
     protected static String[] itemClass = { "MainHand", "OffHand", "Head", "Armor", "Shoes", "Cape" };
     protected static String[] itemField = { "Type", "Enchant", "Tier" };
 
-    public SnapshotNew(int snapshotType, int playerNumber) {
+    public Snapshot(int snapshotType, int playerNumber) {
         super(FIELDS);
         this.snapshotType = snapshotType;
         this.playerNumber = playerNumber;

@@ -88,7 +88,7 @@ public class DBInterface {
         }
     }
 
-    public void addMatch(MatchNew match) {
+    public void addMatch(Match match) {
         // adds a new match to the db
         try {
             Statement stmt = con.createStatement();
@@ -96,10 +96,10 @@ public class DBInterface {
                     "INSERT INTO `match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
                     match));
             for (int i = 0; i < 10; i++) {
-                addMatchPlayer((PlayerNew) match.getSubMap(i));
+                addMatchPlayer((Player) match.getSubMap(i));
             }
             for (int i = 10; i < match.subMaps.size(); i++) {
-                addSnapshot((SnapshotNew) match.getSubMap(i));
+                addSnapshot((Snapshot) match.getSubMap(i));
             }
             commit();
         } catch (SQLException e) {
@@ -108,13 +108,13 @@ public class DBInterface {
         }
     }
 
-    public void addMatchPlayer(PlayerNew player) throws SQLException {
+    public void addMatchPlayer(Player player) throws SQLException {
         Statement stmt = con.createStatement();
         stmt.executeUpdate(
                 String.format("INSERT INTO `match_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
     }
 
-    public void addSnapshot(SnapshotNew snapshot) throws SQLException {
+    public void addSnapshot(Snapshot snapshot) throws SQLException {
         Statement stmt = con.createStatement();
         stmt.executeUpdate(String.format(
                 "INSERT INTO `snapshot` (`match_player_id`, `snapshot_type`, `event_id`, `timestamp`, `mainhand_type`, `mainhand_enchant`, `mainhand_tier`, `offhand_type`, `offhand_enchant`, `offhand_tier`, `head_type`, `head_enchant`, `head_tier`, `armor_type`, `armor_enchant`, `armor_tier`, `shoe_type`, `shoe_enchant`, `shoe_tier`, `cape_type`, `cape_enchant`, `cape_tier`) VALUES %s",

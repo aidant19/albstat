@@ -6,12 +6,12 @@ package albstat;
 
 import java.util.ArrayList;
 
-public class MatchNew extends JSONDefinedMap {
+public class Match extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
     private static final int FIELDS = 5;
 
-    public MatchNew() {
+    public Match() {
         super(FIELDS);
         setKeys();
         setMapping();
@@ -52,7 +52,7 @@ public class MatchNew extends JSONDefinedMap {
 
     protected void setSubMapping() {
         for (int i = 0; i < 10; i++) {
-            subMaps.add(new PlayerNew(i));
+            subMaps.add(new Player(i));
         }
     }
 

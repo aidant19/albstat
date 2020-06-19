@@ -4,7 +4,7 @@ package albstat;
 // 6/16/20
 // a class for containing match data
 
-public class PlayerNew extends JSONDefinedMap {
+public class Player extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
     private static final int FIELDS = 3;
@@ -15,7 +15,7 @@ public class PlayerNew extends JSONDefinedMap {
     private int deaths;
     private String playerName;
 
-    public PlayerNew(int keyNumber) {
+    public Player(int keyNumber) {
         super(FIELDS);
         this.keyNumber = keyNumber;
         setKeys();
