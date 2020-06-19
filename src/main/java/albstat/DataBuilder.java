@@ -1,5 +1,6 @@
 package albstat;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 // aidan tokarski
@@ -35,20 +36,14 @@ public class DataBuilder {
             String matchJSON = apiInterfaceCached.getNewMatches(offset, batchSize);
             jsonHandler.loadArray(matchJSON);
             System.out.println("matches retrieved, parsing matches");
-            ArrayList<MatchNew> matchList = new ArrayList<>();
-            ArrayList<MatchNew> level1List = new ArrayList<>();
             for (int i = 0; i < batchSize; i++) {
                 MatchNew match = new MatchNew();
                 jsonHandler.mapTo(match);
                 if (match.get("level").compareTo("1") == 0) {
-                    level1List.add(match);
+                    System.out.println("level 1 match found");
                 } else {
                     getEvents(match);
-                    matchList.add(match);
-                }
-                System.out.println(match);
-                for (JSONDefinedMap subMap : match.getSubMaps()) {
-                    System.out.println(subMap);
+                    addMatchToDB(match);
                 }
                 jsonHandler.loadNextObject();
             }
@@ -67,7 +62,7 @@ public class DataBuilder {
                     do {
                         if (new Timestamp(eventHandler.getValue("TimeStamp")).isBetween(match.get("timeStart"),
                                 match.get("timeEnd"))) {
-                            addSnapshots(match, eventHandler);
+                            getSnapshots(match, eventHandler);
                         }
                     } while (eventHandler.loadNextObject());
                 }
@@ -75,7 +70,7 @@ public class DataBuilder {
         }
     }
 
-    public void addSnapshots(MatchNew match, JSONHandler eventHandler) {
+    public void getSnapshots(MatchNew match, JSONHandler eventHandler) {
         int nParticipants = Integer.parseInt(eventHandler.getValue("numberOfParticipants"));
         int nGroupMembers = Integer.parseInt(eventHandler.getValue("groupMemberCount"));
         // create killer snapshot
@@ -98,6 +93,17 @@ public class DataBuilder {
             eventHandler.mapTo(nextSnap);
             match.addSubMapping(nextSnap);
         }
+    }
+
+    public void addMatchToDB(MatchNew match) {
+        int nextID = dbInterface.getNextMatchPlayerID();
+        for (int i = 0; i < 10; i++) {
+            String playerID = match.getSubMap(i).get("playerID");
+            for (int j = 10; j < match.subMaps.size(); j++) {
+                match.getSubMap(j).put(playerID, String.valueOf(nextID + i));
+            }
+        }
+        dbInterface.addMatch(match);
     }
 
     public static void main(String[] args) throws Exception {

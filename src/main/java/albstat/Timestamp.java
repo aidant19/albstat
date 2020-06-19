@@ -34,6 +34,13 @@ public class Timestamp {
         }
     }
 
+    public static String convertString(String apiTime){
+        // converts an api timestamp into a db timestamp
+        apiTime = apiTime.replace("Z", "");
+        apiTime = apiTime.replace("T", " ");
+        return apiTime;
+    }
+
     public boolean isBetween(Timestamp time1, Timestamp time2) {
         if (this.isAfter(time1) && this.isBefore(time2)) {
             return true;

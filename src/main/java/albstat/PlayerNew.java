@@ -7,9 +7,12 @@ package albstat;
 public class PlayerNew extends JSONDefinedMap {
 
     // defines the amount of fields in this Map
-    private static final int FIELDS = 5;
+    private static final int FIELDS = 3;
 
     private int keyNumber;
+    private int kills;
+    private int deaths;
+    private String playerName;
 
     public PlayerNew(int keyNumber) {
         super(FIELDS);
@@ -19,6 +22,15 @@ public class PlayerNew extends JSONDefinedMap {
 
     public String put(String key, String newValue) {
         // custom put notifies that the playerID has been updated
+        // filters out kills and deaths
+        // filters out player name
+        if ("Kills".compareTo(key) == 0) {
+            kills = Integer.parseInt(newValue);
+        } else if ("Deaths".compareTo(key) == 0) {
+            deaths = Integer.parseInt(newValue);
+        } else if ("playerName".compareTo(key) == 0){
+            playerName = newValue;
+        }
         synchronized (values) {
             for (int i = 0; i < size; i++) {
                 if (keys[i].compareTo(key) == 0 && key.compareTo("team") != 0) {
@@ -41,13 +53,13 @@ public class PlayerNew extends JSONDefinedMap {
 
     protected void setMapping() {
         // maps fields from the api (JSON) to fields in the map
-        this.jsonMap = new JSONMap(FIELDS);
-        keys[1] = "playerName";
+        this.jsonMap = new JSONMap(5);
+        keys[0] = "playerID";
+        keys[1] = "matchID";
         keys[2] = "team";
-        keys[3] = "kills";
-        keys[4] = "deaths";
         String resultsString = String.format("team%sResults", values[2] = (keyNumber < 5) ? "1" : "2");
-        jsonMap.add(new String[] { resultsString, String.format("keySet%d", keyNumber % 5) }, keys[0] = "playerID");
+        jsonMap.add(new String[] { resultsString, String.format("keySet%d", keyNumber % 5) }, keys[0]);
+        jsonMap.add(new String[] { "MatchId"}, keys[1]);
         // a new thread is created to complete the following mappings once the playerID
         // has been retrieved
         Runnable asyncMap = new Runnable() {
@@ -57,9 +69,9 @@ public class PlayerNew extends JSONDefinedMap {
                         while (values[0] == null) {
                             values.wait();
                         }
-                        jsonMap.add(new String[] { resultsString, values[0], "Name" }, keys[1]);
-                        jsonMap.add(new String[] { resultsString, values[0], "Kills" }, keys[3]);
-                        jsonMap.add(new String[] { resultsString, values[0], "Deaths" }, keys[4]);
+                        jsonMap.add(new String[] { resultsString, values[0], "Name" }, "playerName");
+                        jsonMap.add(new String[] { resultsString, values[0], "Kills" }, "deaths");
+                        jsonMap.add(new String[] { resultsString, values[0], "Deaths" }, "kills");
                         values.notifyAll();
                     }
                 } catch (InterruptedException e) {

@@ -27,6 +27,20 @@ public class MatchNew extends JSONDefinedMap {
         setSubMapping();
     }
 
+    public String put(String key, String newValue) {
+        // custom put converts timestamp format
+        for (int i = 0; i < size; i++) {
+            if (keys[i].compareTo(key) == 0) {
+                if (i == 3 || i == 4) {
+                    values[i] = Timestamp.convertString(newValue);
+                } else {
+                    values[i] = newValue;
+                }
+            }
+        }
+        return null;
+    }
+
     protected void setSubMapping() {
         for (int i = 0; i < 10; i++) {
             subMaps.add(new PlayerNew(i));

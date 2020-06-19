@@ -14,7 +14,7 @@ public class SnapshotNew extends JSONDefinedMap {
     // map specific fields
     private int snapshotType;
     private int playerNumber;
-    private String playerID;
+    public String playerID;
 
     // reference strings
     protected static String[] itemClass = { "MainHand", "OffHand", "Head", "Armor", "Shoes", "Cape" };
@@ -24,19 +24,27 @@ public class SnapshotNew extends JSONDefinedMap {
         super(FIELDS);
         this.snapshotType = snapshotType;
         this.playerNumber = playerNumber;
+        this.playerID = "";
         setKeys();
         setMapping();
     }
 
     public String put(String key, String newValue) {
-        // custom put notifies that the playerID has been updated
+        // custom put with special cases:
+        // picks out the playerID keyword
+        // converts timestamp format
+        // adds items as 3 separate fields
         if (key.contains("TypeFull")) {
             addItem(key.split(" ")[0], newValue);
+        } else if (playerID.compareTo(key) == 0) {
+            values[0] = newValue;
+        } else if ("playerID".compareTo(key) == 0) {
+            playerID = newValue;
         } else {
             for (int i = 0; i < size; i++) {
                 if (keys[i].compareTo(key) == 0) {
-                    if (keys[i].compareTo("playerID") == 0) {
-                        playerID = newValue;
+                    if (i == 3) {
+                        values[i] = Timestamp.convertString(newValue);
                     } else {
                         values[i] = newValue;
                     }

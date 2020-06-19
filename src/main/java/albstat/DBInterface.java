@@ -7,6 +7,8 @@ package albstat;
 import java.sql.*;
 import java.util.ArrayList;
 
+import com.google.protobuf.TextFormat.ParseException;
+
 public class DBInterface {
 
     private Connection con;
@@ -69,6 +71,56 @@ public class DBInterface {
             System.out.println(e);
         }
         return matchIDs;
+    }
+
+    public int getNextMatchPlayerID() {
+        // retrieves the current highest match_player_id (the latest)
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
+            if (rs.next()) {
+                return rs.getInt(1) + 1;
+            } else {
+                return 1;
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+            System.exit(0);
+            return 0;
+        }
+    }
+
+    public void addMatch(MatchNew match) {
+        // adds a new match to the db
+        try {
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO `match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
+                    match));
+            for (int i = 0; i < 10; i++) {
+                addMatchPlayer((PlayerNew) match.getSubMap(i));
+            }
+            for (int i = 10; i < match.subMaps.size(); i++) {
+                addSnapshot((SnapshotNew) match.getSubMap(i));
+            }
+            commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println(e);
+        }
+    }
+
+    public void addMatchPlayer(PlayerNew player) throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.executeUpdate(
+                String.format("INSERT INTO `match_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
+    }
+
+    public void addSnapshot(SnapshotNew snapshot) throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.executeUpdate(String.format(
+                "INSERT INTO `snapshot` (`match_player_id`, `snapshot_type`, `event_id`, `timestamp`, `mainhand_type`, `mainhand_enchant`, `mainhand_tier`, `offhand_type`, `offhand_enchant`, `offhand_tier`, `head_type`, `head_enchant`, `head_tier`, `armor_type`, `armor_enchant`, `armor_tier`, `shoe_type`, `shoe_enchant`, `shoe_tier`, `cape_type`, `cape_enchant`, `cape_tier`) VALUES %s",
+                snapshot));
     }
 
     public void addMatches(ArrayList<Match> matchList) throws SQLException {

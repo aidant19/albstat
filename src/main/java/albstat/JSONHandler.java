@@ -24,7 +24,7 @@ public class JSONHandler {
     private JSONArray loadedArray; // extended List
     private JSONObject baseObject; // extended Map
     private JSONObject loadedObject; // extended Map
-    
+
     // array iterator
     private Iterator arrayIterator;
 
@@ -37,14 +37,16 @@ public class JSONHandler {
         try {
             loadedArray = (JSONArray) parser.parse(rawJSON);
             arrayIterator = loadedArray.iterator();
-            baseObject = (JSONObject) loadedArray.get(0);
-            loadedObject = baseObject;
-            return true;
+            if (arrayIterator.hasNext()) {
+                baseObject = (JSONObject) arrayIterator.next();
+                loadedObject = baseObject;
+                return true;
+            } else {
+                return false;
+            }
         } catch (ParseException e) {
             System.out.println(e);
             System.exit(0);
-            return false;
-        } catch (IndexOutOfBoundsException e) {
             return false;
         }
     }
@@ -139,19 +141,11 @@ public class JSONHandler {
     public void mapTo(JSONDefinedMap map) {
         // maps the loaded object to values addressed by a JSONDefinedMap
         for (Entry<String, String[]> entry : map.getJSONMap().entrySet()) {
-            for (String string : entry.getValue()) {
-                System.out.print(string + ",");
-            }
-            System.out.println();
             map.put(entry.getKey(), getValueFromChain(entry.getValue()));
         }
         if (map.getSubMap(0) != null) {
             for (JSONDefinedMap subMap : map.getSubMaps()) {
                 for (Entry<String, String[]> entry : subMap.getJSONMap().entrySet()) {
-                    for (String string : entry.getValue()) {
-                        System.out.print(string + ",");
-                    }
-                    System.out.println();
                     subMap.put(entry.getKey(), getValueFromChain(entry.getValue()));
                 }
             }
