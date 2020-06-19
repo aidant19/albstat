@@ -11,8 +11,8 @@ public class Player extends JSONDefinedMap {
 
     // map specific fields
     private int keyNumber;
-    private int kills;
-    private int deaths;
+    public int kills;
+    public int deaths;
     private String playerName;
 
     public Player(int keyNumber) {

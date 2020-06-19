@@ -105,6 +105,7 @@ public class DBInterface {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println(e);
+            System.exit(0);
         }
     }
 
@@ -119,5 +120,28 @@ public class DBInterface {
         stmt.executeUpdate(String.format(
                 "INSERT INTO `snapshot` (`match_player_id`, `snapshot_type`, `event_id`, `timestamp`, `mainhand_type`, `mainhand_enchant`, `mainhand_tier`, `offhand_type`, `offhand_enchant`, `offhand_tier`, `head_type`, `head_enchant`, `head_tier`, `armor_type`, `armor_enchant`, `armor_tier`, `shoe_type`, `shoe_enchant`, `shoe_tier`, `cape_type`, `cape_enchant`, `cape_tier`) VALUES %s",
                 snapshot));
+    }
+
+    public void addLevel1Match(Match match) {
+        try {
+        Statement stmt = con.createStatement();
+        stmt.executeUpdate(String.format(
+            "INSERT INTO `match1` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
+            match));
+            for (int i = 0; i < 10; i++) {
+                addLevel1MatchPlayer((Player) match.getSubMap(i));
+            }
+            commit();
+        } catch (SQLException e){
+            e.printStackTrace();
+            System.out.println(e);
+            System.exit(0);
+        }
+    }
+
+    public void addLevel1MatchPlayer(Player player) throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.executeUpdate(
+                String.format("INSERT INTO `match1_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
     }
 }

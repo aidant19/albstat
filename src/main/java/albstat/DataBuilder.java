@@ -21,30 +21,30 @@ public class DataBuilder {
         this.apiInterfaceCached = new APIInterfaceCached();
     }
 
-    public void getNewMatches(int offset, int batchSize, int total) {
+    public void getNewMatches(int offset) {
         // primary data retrieval method
-        if (offset + total > 10000) {
+        if (offset > 9999) {
             // the api only allows for requests of the last 10,000 matches
-            System.out.println("offset + total cannot be greater than 10000");
+            System.out.println("offset cannot be greater than 9999");
             System.exit(0);
         } else {
             System.out.println("retrieving parsed match ids");
             ArrayList<String> parsedMatchIDs = dbInterface.getParsedMatchIDs();
             System.out.printf("%d entries found\n", parsedMatchIDs.size());
-            System.out.printf("requesting %d matches, offset %d from api\n", batchSize, offset);
-            String matchJSON = apiInterface.getNewMatches(offset, batchSize);
-            jsonHandler.loadArray(matchJSON);
-            System.out.println("matches retrieved, parsing matches");
-            for (int i = 0; i < batchSize; i++) {
+            System.out.printf("requesting %d matches\n", offset);
+            for (int i = offset; i > 0; i--) {
+                String matchJSON = apiInterface.getNewMatches(i, 1);
+                jsonHandler.loadObject(matchJSON);
                 Match match = new Match();
                 jsonHandler.mapTo(match);
                 if (match.get("level").compareTo("1") == 0) {
-                    System.out.println("level 1 match found");
+                    addLevel1MatchToDB(match);
                 } else {
                     getEvents(match);
-                    addMatchToDB(match);
+                    if (DataVerifier.verify(match)) {
+                        addMatchToDB(match);
+                    }
                 }
-                jsonHandler.loadNextObject();
             }
         }
     }
@@ -107,8 +107,13 @@ public class DataBuilder {
         dbInterface.addMatch(match);
     }
 
+    public void addLevel1MatchToDB(Match match) {
+        dbInterface.addLevel1Match(match);
+    }
+
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
-        builder.getNewMatches(0, 1, 1);
+        // offset, batchSize, total
+        builder.getNewMatches(9999);
     }
 }
