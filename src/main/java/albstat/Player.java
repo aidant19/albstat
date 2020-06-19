@@ -46,8 +46,8 @@ public class Player extends JSONDefinedMap {
                             values.wait();
                         }
                         jsonMap.add(new String[] { resultsString, values[0], "Name" }, "playerName");
-                        jsonMap.add(new String[] { resultsString, values[0], "Kills" }, "deaths");
-                        jsonMap.add(new String[] { resultsString, values[0], "Deaths" }, "kills");
+                        jsonMap.add(new String[] { resultsString, values[0], "Kills" }, "kills");
+                        jsonMap.add(new String[] { resultsString, values[0], "Deaths" }, "deaths");
                         // allows the main thread to resume
                         values.notifyAll();
                     }
