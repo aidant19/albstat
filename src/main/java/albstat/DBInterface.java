@@ -64,6 +64,10 @@ public class DBInterface {
             while (rs.next()) {
                 matchIDs.add(rs.getString(1));
             }
+            rs = stmt.executeQuery("SELECT `match_id` FROM `match1`");
+            while (rs.next()) {
+                matchIDs.add(rs.getString(1));
+            }
         } catch (SQLException e) {
             System.out.println("error retrieving parsed matches");
             System.out.println(e);
