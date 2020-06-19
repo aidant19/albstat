@@ -34,6 +34,7 @@ public class DataBuilder {
             System.out.printf("requesting %d matches\n", offset);
             for (int i = offset; i > 0; i--) {
                 String matchJSON = apiInterface.getNewMatches(i, 1);
+                apiInterface.reportStatus(String.format("matches parsed: %d", offset-i), false, false);
                 jsonHandler.loadObject(matchJSON);
                 Match match = new Match();
                 jsonHandler.mapTo(match);
@@ -47,6 +48,7 @@ public class DataBuilder {
                 }
             }
         }
+        apiInterface.reportStatus(String.format("matches parsed: %d", offset), false, true);
     }
 
     public void getEvents(Match match) {
