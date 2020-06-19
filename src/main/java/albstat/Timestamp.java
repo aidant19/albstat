@@ -42,6 +42,7 @@ public class Timestamp {
     }
 
     public boolean isBetween(Timestamp time1, Timestamp time2) {
+        // checks if this timestamp is between time1 and time2 (inclusive)
         if (this.isAfter(time1) && this.isBefore(time2)) {
             return true;
         } else {
@@ -50,12 +51,15 @@ public class Timestamp {
     }
 
     public boolean isBetween(String time1String, String time2String){
+        // checks if this timestamp is between time1 and time2 (inclusive)
+        // time1 and time2 are converted from string
         Timestamp time1 = new Timestamp(time1String);
         Timestamp time2 = new Timestamp(time2String);
         return isBetween(time1, time2);
     }
 
     public boolean isAfter(Timestamp time) {
+        // returns true if this timestamp is after the specified time (inclusive)
         if (this.date[0] != time.date[0]) {
             if (this.date[0] < time.date[0]) {
                 return false;
@@ -98,6 +102,7 @@ public class Timestamp {
     }
 
     public boolean isBefore(Timestamp time) {
+        // returns true if this timestamp is before the specified time (inclusive)
         if (this.date[0] != time.date[0]) {
             if (this.date[0] > time.date[0]) {
                 return false;
@@ -140,7 +145,7 @@ public class Timestamp {
     }
 
     public String toString(){
-        // returns this object in the db format
+        // returns this timestamp in the db format
         return String.format("%d-%d-%d %.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0], this.time[1], this.time[2]);
     }
 }
