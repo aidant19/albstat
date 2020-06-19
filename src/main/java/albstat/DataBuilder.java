@@ -1,6 +1,5 @@
 package albstat;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 // aidan tokarski
@@ -33,7 +32,7 @@ public class DataBuilder {
             ArrayList<String> parsedMatchIDs = dbInterface.getParsedMatchIDs();
             System.out.printf("%d entries found\n", parsedMatchIDs.size());
             System.out.printf("requesting %d matches, offset %d from api\n", batchSize, offset);
-            String matchJSON = apiInterfaceCached.getNewMatches(offset, batchSize);
+            String matchJSON = apiInterface.getNewMatches(offset, batchSize);
             jsonHandler.loadArray(matchJSON);
             System.out.println("matches retrieved, parsing matches");
             for (int i = 0; i < batchSize; i++) {
@@ -56,7 +55,7 @@ public class DataBuilder {
         JSONHandler eventHandler = new JSONHandler();
         for (int i = 0; i < 5; i++) {
             for (int j = 5; j < 10; j++) {
-                String eventJSON = apiInterfaceCached.getEventHistory(match.getSubMap(i).get("playerID"),
+                String eventJSON = apiInterface.getEventHistory(match.getSubMap(i).get("playerID"),
                         match.getSubMap(j).get("playerID"));
                 if (eventHandler.loadArray(eventJSON)) {
                     do {
@@ -97,6 +96,8 @@ public class DataBuilder {
 
     public void addMatchToDB(MatchNew match) {
         int nextID = dbInterface.getNextMatchPlayerID();
+        // sub maps 0-9 reserved for players
+        // sub maps 10+ reserved for snapshots
         for (int i = 0; i < 10; i++) {
             String playerID = match.getSubMap(i).get("playerID");
             for (int j = 10; j < match.subMaps.size(); j++) {

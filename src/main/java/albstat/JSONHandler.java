@@ -33,7 +33,9 @@ public class JSONHandler {
     }
 
     public boolean loadArray(String rawJSON) {
-        // loads a JSONArray and its first object parsed from a string
+        // loads a JSONArray and its first object
+        // returns true if the first object was loaded
+        // returns false if the array is empty
         try {
             loadedArray = (JSONArray) parser.parse(rawJSON);
             arrayIterator = loadedArray.iterator();
@@ -63,7 +65,7 @@ public class JSONHandler {
     }
 
     public void loadSubObject(String key) {
-        // loads a JSONObject stored within the top level object
+        // loads a JSONObject stored within the current loaded object
         loadedObject = (JSONObject) loadedObject.get(key);
     }
 
@@ -109,6 +111,7 @@ public class JSONHandler {
                 int i;
                 for (i = 1; i < address.length; i++) {
                     if (address[i].contains(":")) {
+                        // returns an object/field from an array
                         if (address[i].contains("last")) {
                             JSONArray tempArray = (JSONArray) current;
                             current = tempArray.get(tempArray.size() - 1);
@@ -117,6 +120,7 @@ public class JSONHandler {
                             current = tempArray.get(Integer.parseInt(address[i].substring(1)));
                         }
                     } else if (address[i].contains("keySet")) {
+                        // returns an object/field by key index
                         Set<String> keySet = ((JSONObject) current).keySet();
                         int counter = 0;
                         int index = Integer.parseInt(address[i].substring(6));
@@ -143,6 +147,7 @@ public class JSONHandler {
         for (Entry<String, String[]> entry : map.getJSONMap().entrySet()) {
             map.put(entry.getKey(), getValueFromChain(entry.getValue()));
         }
+        // maps the loaded object to values addressed in sub maps
         if (map.getSubMap(0) != null) {
             for (JSONDefinedMap subMap : map.getSubMaps()) {
                 for (Entry<String, String[]> entry : subMap.getJSONMap().entrySet()) {
