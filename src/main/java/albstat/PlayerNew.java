@@ -9,6 +9,7 @@ public class PlayerNew extends JSONDefinedMap {
     // defines the amount of fields in this Map
     private static final int FIELDS = 3;
 
+    // map specific fields
     private int keyNumber;
     private int kills;
     private int deaths;
@@ -17,6 +18,7 @@ public class PlayerNew extends JSONDefinedMap {
     public PlayerNew(int keyNumber) {
         super(FIELDS);
         this.keyNumber = keyNumber;
+        setKeys();
         setMapping();
     }
 

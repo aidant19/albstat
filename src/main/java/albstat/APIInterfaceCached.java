@@ -13,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 // util
-import java.util.Set;
 import java.util.ArrayList;
 
 // json parsing
@@ -144,32 +143,6 @@ public class APIInterfaceCached {
             System.out.println("unable to open new event_cache file");
         } catch (IOException ex) {
             System.out.println("error writing to event_cache file");
-        }
-    }
-
-    public String getPlayerName(String playerID) {
-        JSONParser parser = new JSONParser();
-        String playerJSON = getHTML(
-                String.format("https://gameinfo.albiononline.com/api/gameinfo/players/%s", playerID));
-        try {
-            JSONObject player = (JSONObject) parser.parse(playerJSON);
-            return player.get("Name").toString();
-        } catch (ParseException pe) {
-            reportStatus(pe + " (player name error)", true, false);
-            return null;
-        }
-    }
-
-    public String getItemName(String item_type) {
-        JSONParser parser = new JSONParser();
-        String itemJSON = getHTML(
-                String.format("https://gameinfo.albiononline.com/api/gameinfo/items/T4_%s/data", item_type));
-        try {
-            JSONObject item = (JSONObject) parser.parse(itemJSON);
-            return ((JSONObject) item.get("localizedNames")).get("EN-US").toString();
-        } catch (ParseException pe) {
-            reportStatus(pe + " (item name error)", true, false);
-            return null;
         }
     }
 
