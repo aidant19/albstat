@@ -4,6 +4,8 @@ package albstat;
 // 6/10/20
 // a class for verifying reported and cross-referenced data
 
+import java.util.Set;
+
 public class DataVerifier {
 
     public static boolean verify(Match match) {
@@ -34,5 +36,17 @@ public class DataVerifier {
             }
         }
         return true;
+    }
+
+    public static boolean verifyPlayers(Set<String> team1Players, Set<String> team2Players) {
+        // verifies that both teams contain 5 players
+        // returns false if this is not true
+        if (team1Players.size() != 5) {
+            return false;
+        } else if (team2Players.size() != 5) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }

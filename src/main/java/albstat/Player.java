@@ -66,9 +66,9 @@ public class Player extends JSONDefinedMap {
         // custom put notifies that the playerID has been updated
         // filters out kills, deaths, playerName, team
         // return type matches super, but will always return null
-        if ("Kills".compareTo(key) == 0) {
+        if ("kills".compareTo(key) == 0) {
             kills = Integer.parseInt(newValue);
-        } else if ("Deaths".compareTo(key) == 0) {
+        } else if ("deaths".compareTo(key) == 0) {
             deaths = Integer.parseInt(newValue);
         } else if ("playerName".compareTo(key) == 0) {
             playerName = newValue;

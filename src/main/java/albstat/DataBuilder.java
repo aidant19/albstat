@@ -1,6 +1,7 @@
 package albstat;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 // aidan tokarski
 // 6/14/20
@@ -28,29 +29,56 @@ public class DataBuilder {
             System.out.println("offset cannot be greater than 9999");
             System.exit(0);
         } else {
+            int counter = 0;
             System.out.println("retrieving parsed match ids");
             ArrayList<String> parsedMatchIDs = dbInterface.getParsedMatchIDs();
             System.out.printf("%d entries found\n", parsedMatchIDs.size());
             System.out.printf("requesting %d matches\n", offset);
-            for (int i = offset; i > 0; i--) {
-                String matchJSON = apiInterface.getNewMatches(i, 1);
-                apiInterface.reportStatus(String.format("matches parsed: %d", offset - i), false, false);
-                jsonHandler.loadArray(matchJSON);
-                Match match = new Match();
-                jsonHandler.mapTo(match);
-                if (!parsedMatchIDs.contains(match.get("matchID"))) {
-                    if (match.get("level").compareTo("1") == 0) {
-                        addLevel1MatchToDB(match);
-                    } else {
-                        getEvents(match);
-                        if (DataVerifier.verify(match)) {
-                            addMatchToDB(match);
+            String matchJSON = apiInterface.getNewMatches(0, offset);
+            System.out.println("finding earliest unparsed match...");
+            if (jsonHandler.loadArrayReverse(matchJSON)) {
+                do {
+                    apiInterface.reportStatus(String.format("matches parsed: %d", counter), false, false);
+                    if (initVerify()) {
+                        Match match = new Match();
+                        jsonHandler.mapTo(match);
+                        if (!(parsedMatchIDs.contains(match.get("matchID")))) {
+                            // adding the new match id to prevent api changes from
+                            // causing requests to overlap
+                            parsedMatchIDs.add(match.get("matchID"));
+                            if (match.get("level").compareTo("1") == 0) {
+                                addLevel1MatchToDB(match);
+                            } else {
+                                getEvents(match);
+                                if (DataVerifier.verify(match)) {
+                                    addMatchToDB(match);
+                                }
+                            }
                         }
                     }
-                }
+                    counter++;
+                } while (jsonHandler.loadPreviousObject());
             }
         }
         apiInterface.reportStatus(String.format("matches parsed: %d", offset), false, true);
+    }
+
+    public boolean initVerify() {
+        // verifies that a match has 5 players on each team
+        jsonHandler.loadSubObject("team1Results");
+        Set<String> team1Players = jsonHandler.getKeySet();
+        jsonHandler.loadBaseObject();
+        jsonHandler.loadSubObject("team2Results");
+        Set<String> team2Players = jsonHandler.getKeySet();
+        jsonHandler.loadBaseObject();
+        if (DataVerifier.verifyPlayers(team1Players, team2Players)) {
+            return true;
+        } else {
+            System.out.printf("player count discrepancy @ match %s\n", jsonHandler.getValue("MatchId"));
+            System.out.printf("review at: https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague/%s",
+                    jsonHandler.getValue("MatchId"));
+            return false;
+        }
     }
 
     public void getEvents(Match match) {
@@ -118,6 +146,6 @@ public class DataBuilder {
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
         // offset, batchSize, total
-        builder.getNewMatches(9999);
+        builder.getNewMatches(6500);
     }
 }

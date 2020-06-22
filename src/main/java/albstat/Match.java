@@ -27,7 +27,7 @@ public class Match extends JSONDefinedMap {
 
     protected void setMapping() {
         // maps fields from the api (JSON) to fields in the map
-        this.jsonMap = new JSONMap(FIELDS);
+        this.jsonMap = new JSONMap(5);
         jsonMap.add(new String[] { "MatchId" }, keys[0]);
         jsonMap.add(new String[] { "crystalLeagueLevel" }, keys[1]);
         jsonMap.add(new String[] { "winner" }, keys[2]);

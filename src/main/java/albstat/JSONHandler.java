@@ -6,6 +6,7 @@ package albstat;
 
 // util
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -26,7 +27,7 @@ public class JSONHandler {
     private JSONObject loadedObject; // extended Map
 
     // array iterator
-    private Iterator arrayIterator;
+    private ListIterator listIterator;
 
     public JSONHandler() {
         this.parser = new JSONParser();
@@ -38,9 +39,30 @@ public class JSONHandler {
         // returns false if the array is empty
         try {
             loadedArray = (JSONArray) parser.parse(rawJSON);
-            arrayIterator = loadedArray.iterator();
-            if (arrayIterator.hasNext()) {
-                baseObject = (JSONObject) arrayIterator.next();
+            listIterator = loadedArray.listIterator();
+            if (listIterator.hasNext()) {
+                baseObject = (JSONObject) listIterator.next();
+                loadedObject = baseObject;
+                return true;
+            } else {
+                return false;
+            }
+        } catch (ParseException e) {
+            System.out.println(e);
+            System.exit(0);
+            return false;
+        }
+    }
+
+    public boolean loadArrayReverse(String rawJSON) {
+        // loads a JSONArray and its last object
+        // returns true if the last object was loaded
+        // returns false if the array is empty
+        try {
+            loadedArray = (JSONArray) parser.parse(rawJSON);
+            listIterator = loadedArray.listIterator(loadedArray.size());
+            if (listIterator.hasPrevious()) {
+                baseObject = (JSONObject) listIterator.previous();
                 loadedObject = baseObject;
                 return true;
             } else {
@@ -77,13 +99,33 @@ public class JSONHandler {
     public boolean loadNextObject() {
         // loads the next JSONObject in the loaded array
         // returns false if there is no next object
-        if (arrayIterator.hasNext()) {
-            baseObject = (JSONObject) arrayIterator.next();
+        if (listIterator.hasNext()) {
+            baseObject = (JSONObject) listIterator.next();
             loadedObject = baseObject;
             return true;
         } else {
             return false;
         }
+    }
+
+    public boolean loadPreviousObject() {
+        // loads the previous JSONObject in the loaded array
+        // returns false if there is no previous object
+        if (listIterator.hasPrevious()) {
+            baseObject = (JSONObject) listIterator.previous();
+            loadedObject = baseObject;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean hasNext() {
+        return this.listIterator.hasNext();
+    }
+
+    public boolean hasPrevious() {
+        return this.listIterator.hasPrevious();
     }
 
     public JSONObject getObject(String key) {
@@ -139,7 +181,18 @@ public class JSONHandler {
             }
         } catch (NullPointerException e) {
             return null;
+        } catch (ClassCastException e){
+            for (String string : address) {
+                System.out.println(string);
+            }
+            e.printStackTrace();
+            System.exit(0);
+            return null;
         }
+    }
+
+    public Set<String> getKeySet(){
+        return loadedObject.keySet();
     }
 
     public void mapTo(JSONDefinedMap map) {

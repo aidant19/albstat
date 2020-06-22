@@ -109,7 +109,6 @@ public class DBInterface {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println(e);
-            System.exit(0);
         }
     }
 
@@ -139,7 +138,6 @@ public class DBInterface {
         } catch (SQLException e){
             e.printStackTrace();
             System.out.println(e);
-            System.exit(0);
         }
     }
 
