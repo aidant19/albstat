@@ -87,7 +87,7 @@ public class DataBuilder {
         JSONHandler eventHandler = new JSONHandler();
         for (int i = 0; i < 5; i++) {
             for (int j = 5; j < 10; j++) {
-                String eventJSON = apiInterface.getEventHistory(match.getSubMap(i).get("playerID"),
+                String eventJSON = apiInterfaceCached.getEventHistory(match.getSubMap(i).get("playerID"),
                         match.getSubMap(j).get("playerID"));
                 if (eventHandler.loadArray(eventJSON)) {
                     do {
@@ -143,9 +143,16 @@ public class DataBuilder {
         dbInterface.addLevel1Match(match);
     }
 
+    public void testMatch(String matchID){
+        String matchJSON = apiInterfaceCached.getNewMatches(0,1);
+        jsonHandler.loadArray(matchJSON);
+        Match test = new Match();
+        jsonHandler.mapTo(test);
+        getEvents(test);
+    }
+
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
-        // offset, batchSize, total
-        builder.getNewMatches(6500);
+        builder.testMatch("S2Sr88vmQjiRHV2uoI3S1g");
     }
 }

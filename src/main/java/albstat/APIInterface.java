@@ -52,6 +52,11 @@ public class APIInterface {
         return getHTML(URL);
     }
 
+    public String getMatch(String matchID) {
+        String URL = String.format("https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague/%s", matchID);
+        return getHTML(URL);
+    }
+
     public void reportStatus(String status, boolean error, boolean last) {
         String newReport;
         if (lastReport == null) {

@@ -146,6 +146,20 @@ public class APIInterfaceCached {
         }
     }
 
+    public void writeEvents(String eventJSON) {
+        try {
+            FileWriter fileWriter = new FileWriter("event_cache.txt");
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write(eventJSON);
+            bufferedWriter.write("\n");
+            bufferedWriter.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("unable to open new event_cache file");
+        } catch (IOException ex) {
+            System.out.println("error writing to event_cache file");
+        }
+    }
+
     public void reportStatus(String status, boolean error, boolean last) {
         String newReport;
         if (lastReport == null) {
