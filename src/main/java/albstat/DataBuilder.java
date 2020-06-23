@@ -92,7 +92,7 @@ public class DataBuilder {
                 if (eventHandler.loadArray(eventJSON)) {
                     do {
                         if (new Timestamp(eventHandler.getValue("TimeStamp")).isBetween(match.get("timeStart"),
-                                match.get("timeEnd"))) {
+                                match.get("timeEnd"), 15)) {
                             getSnapshots(match, eventHandler);
                         }
                     } while (eventHandler.loadNextObject());

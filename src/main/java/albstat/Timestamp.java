@@ -17,7 +17,7 @@ public class Timestamp {
         this.time = new double[3];
         timestampString = timestampString.replace("Z", "");
         String[] dateTimeStrings;
-        if (timestampString.contains("T")){
+        if (timestampString.contains("T")) {
             dateTimeStrings = timestampString.split("T");
         } else {
             dateTimeStrings = timestampString.split(" ");
@@ -34,11 +34,23 @@ public class Timestamp {
         }
     }
 
-    public static String convertString(String apiTime){
+    public static String convertString(String apiTime) {
         // converts an api timestamp into a db timestamp
         apiTime = apiTime.replace("Z", "");
         apiTime = apiTime.replace("T", " ");
         return apiTime;
+    }
+
+    public static void addSeconds(Timestamp stamp, int seconds) {
+        if (stamp.time[2] + seconds >= 60 && stamp.time[1] + (seconds / 60) >= 60
+                && stamp.time[0] + (seconds / 3600) >= 24) {
+            System.out.println("Timestamp error: need to modify date (unsupported)");
+            return;
+        } else {
+            stamp.time[2] = (stamp.time[2] + seconds) % 60;
+            stamp.time[1] += (seconds / 60) % 60;
+            stamp.time[0] += (seconds / 3600) % 24;
+        }
     }
 
     public boolean isBetween(Timestamp time1, Timestamp time2) {
@@ -50,11 +62,20 @@ public class Timestamp {
         }
     }
 
-    public boolean isBetween(String time1String, String time2String){
+    public boolean isBetween(String time1String, String time2String) {
         // checks if this timestamp is between time1 and time2 (inclusive)
         // time1 and time2 are converted from string
         Timestamp time1 = new Timestamp(time1String);
         Timestamp time2 = new Timestamp(time2String);
+        return isBetween(time1, time2);
+    }
+
+    public boolean isBetween(String time1String, String time2String, int extension) {
+        // checks if this timestamp is between time1 and time2 (inclusive)
+        // time1 and time2 are converted from string
+        Timestamp time1 = new Timestamp(time1String);
+        Timestamp time2 = new Timestamp(time2String);
+        addSeconds(time2, extension);
         return isBetween(time1, time2);
     }
 
@@ -144,8 +165,9 @@ public class Timestamp {
         return true;
     }
 
-    public String toString(){
+    public String toString() {
         // returns this timestamp in the db format
-        return String.format("%d-%d-%d %.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0], this.time[1], this.time[2]);
+        return String.format("%d-%d-%d %.0f:%.0f:%f", this.date[0], this.date[1], this.date[2], this.time[0],
+                this.time[1], this.time[2]);
     }
 }
