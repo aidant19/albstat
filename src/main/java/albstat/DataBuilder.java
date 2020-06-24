@@ -2,6 +2,7 @@ package albstat;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.jar.Attributes.Name;
 
 // aidan tokarski
 // 6/14/20
@@ -143,9 +144,17 @@ public class DataBuilder {
         dbInterface.addLevel1Match(match);
     }
 
+    public void getPlayerNames(){
+        ArrayList<String> UnnamedIDs = dbInterface.getUnnamedPlayerIDs();
+        for (String id : UnnamedIDs) {
+            jsonHandler.loadObject(apiInterface.getPlayer(id));
+            dbInterface.addPlayer(id, jsonHandler.getValue("Name"));
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
         // offset, batchSize, total
-        builder.getNewMatches(6500);
+        builder.getPlayerNames();
     }
 }

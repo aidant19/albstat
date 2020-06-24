@@ -52,6 +52,11 @@ public class APIInterface {
         return getHTML(URL);
     }
 
+    public String getPlayer(String playerID) {
+        String URL = String.format("https://gameinfo.albiononline.com/api/gameinfo/players/%s", playerID);
+        return getHTML(URL);
+    }
+
     public void reportStatus(String status, boolean error, boolean last) {
         String newReport;
         if (lastReport == null) {

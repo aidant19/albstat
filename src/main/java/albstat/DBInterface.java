@@ -127,15 +127,15 @@ public class DBInterface {
 
     public void addLevel1Match(Match match) {
         try {
-        Statement stmt = con.createStatement();
-        stmt.executeUpdate(String.format(
-            "INSERT INTO `match1` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
-            match));
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO `match1` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
+                    match));
             for (int i = 0; i < 10; i++) {
                 addLevel1MatchPlayer((Player) match.getSubMap(i));
             }
             commit();
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             System.out.println(e);
         }
@@ -145,5 +145,34 @@ public class DBInterface {
         Statement stmt = con.createStatement();
         stmt.executeUpdate(
                 String.format("INSERT INTO `match1_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
+    }
+
+    public ArrayList<String> getUnnamedPlayerIDs() {
+        // for updating players whose names were not retrieved
+        ArrayList<String> unnamedIDs = new ArrayList<>();
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT player_id FROM match_player WHERE player_id NOT IN (SELECT player_id FROM player) GROUP BY player_id");
+            while (rs.next()) {
+                unnamedIDs.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+        return unnamedIDs;
+    }
+
+    public void addPlayer(String playerID, String playerName){
+        try {
+        Statement stmt = con.createStatement();
+        stmt.executeUpdate(
+                String.format("INSERT INTO `player` (`player_id`, `player_name`) VALUES ('%s','%s')", playerID, playerName));
+        commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
     }
 }
