@@ -175,4 +175,35 @@ public class DBInterface {
             System.exit(0);
         }
     }
+
+    public ArrayList<String> getUniqueEvents(){
+        // originally created for updating truncated timestamps
+        ArrayList<String> eventIDs = new ArrayList<>();
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT event_id FROM snapshot GROUP BY event_id");
+            while (rs.next()) {
+                eventIDs.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+        return eventIDs;
+    }
+
+    public void updateSnapshotTime(String eventID, String timestamp){
+        // for updating snapshot timestamps
+        // originally created for updating truncated timestamps
+        try {
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate(
+                String.format("UPDATE snapshot SET timestamp = '%s' WHERE event_id = '%s'", timestamp, eventID));
+            commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }
 }

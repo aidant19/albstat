@@ -42,7 +42,9 @@ public class DataBuilder {
                     apiInterface.reportStatus(String.format("matches parsed: %d", counter), false, false);
                     if (initVerify()) {
                         Match match = new Match();
+                        // begin async
                         jsonHandler.mapTo(match);
+                        // end async
                         if (!(parsedMatchIDs.contains(match.get("matchID")))) {
                             // adding the new match id to prevent api changes from
                             // causing requests to overlap
@@ -152,9 +154,14 @@ public class DataBuilder {
         }
     }
 
+    public void updateTimeStamps(){
+        // for updating timestamps which were truncated
+        ArrayList<String> eventIDs = dbInterface.getUniqueEvents();
+    }
+
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
         // offset, batchSize, total
-        builder.getPlayerNames();
+        builder.getNewMatches(9999);
     }
 }
