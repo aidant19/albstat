@@ -4,12 +4,17 @@ package albstat;
 // 6/12/20
 // for interfacing api requests and processing with the database
 
+// modified by:
+// jordan williams
+// 6/29/20
+// + automatic snapshot weighing
+
 import java.sql.*;
 import java.util.ArrayList;
 
 public class DBInterface {
 
-    private Connection con;
+    private final Connection con;
     // note: the connection is unique to each DBInterface instance
     // multi-threading requires multiple DBInterfaces
 
@@ -20,7 +25,7 @@ public class DBInterface {
 
     public static Connection connect() {
         // note: the connection is setup to require commits
-        DBCredentials credentials = new DBCredentials();
+        final DBCredentials credentials = new DBCredentials();
         Connection con;
         try {
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", credentials.getUser(),
@@ -28,7 +33,7 @@ public class DBInterface {
             con.setAutoCommit(false);
             System.out.println("database connection established");
             return con;
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             System.out.println("could not connect to database");
             System.exit(0);
             return null;
@@ -57,9 +62,9 @@ public class DBInterface {
 
     public ArrayList<String> getParsedMatchIDs() {
         // returns previously parsed matches for use with new api interface instances
-        ArrayList<String> matchIDs = new ArrayList<String>();
+        final ArrayList<String> matchIDs = new ArrayList<String>();
         try {
-            Statement stmt = con.createStatement();
+            final Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT `match_id` FROM `match`");
             while (rs.next()) {
                 matchIDs.add(rs.getString(1));
@@ -68,7 +73,7 @@ public class DBInterface {
             while (rs.next()) {
                 matchIDs.add(rs.getString(1));
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             System.out.println("error retrieving parsed matches");
             System.out.println(e);
         }
@@ -78,27 +83,29 @@ public class DBInterface {
     public int getNextMatchPlayerID() {
         // retrieves the current highest match_player_id (the latest)
         try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
+            final Statement stmt = con.createStatement();
+            final ResultSet rs = stmt.executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
             if (rs.next()) {
                 return rs.getInt(1) + 1;
             } else {
                 return 1;
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             System.out.println(e);
             System.exit(0);
             return 0;
         }
     }
 
-    public void addMatch(Match match) {
+    public void addMatch(final Match match) {
         // adds a new match to the db
         try {
-            Statement stmt = con.createStatement();
+            final Statement stmt = con.createStatement();
             stmt.executeUpdate(String.format(
                     "INSERT INTO `match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
-                    match));
+                    match
+                )
+            );
             for (int i = 0; i < 10; i++) {
                 addMatchPlayer((Player) match.getSubMap(i));
             }
@@ -106,28 +113,32 @@ public class DBInterface {
                 addSnapshot((Snapshot) match.getSubMap(i));
             }
             commit();
-        } catch (SQLException e) {
+
+            // Calculate weights for new snapshots.
+            weighSnapshots();
+
+        } catch (final SQLException e) {
             e.printStackTrace();
             System.out.println(e);
         }
     }
 
-    public void addMatchPlayer(Player player) throws SQLException {
-        Statement stmt = con.createStatement();
+    public void addMatchPlayer(final Player player) throws SQLException {
+        final Statement stmt = con.createStatement();
         stmt.executeUpdate(
                 String.format("INSERT INTO `match_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
     }
 
-    public void addSnapshot(Snapshot snapshot) throws SQLException {
-        Statement stmt = con.createStatement();
+    public void addSnapshot(final Snapshot snapshot) throws SQLException {
+        final Statement stmt = con.createStatement();
         stmt.executeUpdate(String.format(
                 "INSERT INTO `snapshot` (`match_player_id`, `snapshot_type`, `event_id`, `timestamp`, `mainhand_type`, `mainhand_enchant`, `mainhand_tier`, `offhand_type`, `offhand_enchant`, `offhand_tier`, `head_type`, `head_enchant`, `head_tier`, `armor_type`, `armor_enchant`, `armor_tier`, `shoe_type`, `shoe_enchant`, `shoe_tier`, `cape_type`, `cape_enchant`, `cape_tier`) VALUES %s",
                 snapshot));
     }
 
-    public void addLevel1Match(Match match) {
+    public void addLevel1Match(final Match match) {
         try {
-            Statement stmt = con.createStatement();
+            final Statement stmt = con.createStatement();
             stmt.executeUpdate(String.format(
                     "INSERT INTO `match1` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
                     match));
@@ -135,42 +146,42 @@ public class DBInterface {
                 addLevel1MatchPlayer((Player) match.getSubMap(i));
             }
             commit();
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             e.printStackTrace();
             System.out.println(e);
         }
     }
 
-    public void addLevel1MatchPlayer(Player player) throws SQLException {
-        Statement stmt = con.createStatement();
+    public void addLevel1MatchPlayer(final Player player) throws SQLException {
+        final Statement stmt = con.createStatement();
         stmt.executeUpdate(
                 String.format("INSERT INTO `match1_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
     }
 
     public ArrayList<String> getUnnamedPlayerIDs() {
         // for updating players whose names were not retrieved
-        ArrayList<String> unnamedIDs = new ArrayList<>();
+        final ArrayList<String> unnamedIDs = new ArrayList<>();
         try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            final Statement stmt = con.createStatement();
+            final ResultSet rs = stmt.executeQuery(
                     "SELECT player_id FROM match_player WHERE player_id NOT IN (SELECT player_id FROM player) GROUP BY player_id");
             while (rs.next()) {
                 unnamedIDs.add(rs.getString(1));
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             e.printStackTrace();
             System.exit(0);
         }
         return unnamedIDs;
     }
 
-    public void addPlayer(String playerID, String playerName){
+    public void addPlayer(final String playerID, final String playerName){
         try {
-        Statement stmt = con.createStatement();
+        final Statement stmt = con.createStatement();
         stmt.executeUpdate(
                 String.format("INSERT INTO `player` (`player_id`, `player_name`) VALUES ('%s','%s')", playerID, playerName));
         commit();
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             e.printStackTrace();
             System.exit(0);
         }
@@ -204,6 +215,31 @@ public class DBInterface {
         } catch (SQLException e) {
             e.printStackTrace();
             System.exit(0);
+        }
+    }
+    
+    public void weighSnapshots() {
+        // Calculates weights for new snapshots in the DB.
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(`snapshot_id`) FROM `snapshot` WHERE `weight` IS null"
+            );
+            // Count number of new snapshots that are unweighted.
+            int numNewSnapshotsUnweighted = rs.getInt(1);
+
+            // Calculate and add weights to snapshot table.
+            rs = stmt.executeQuery(
+                    "CALL albstat.group_fullbuild();"
+            );
+            int numNewSnapshotsWeighted = rs.getInt(1);
+
+            // Verify that number of new snapshots weighted == number of new snapshots added to DB.
+            assert numNewSnapshotsWeighted == numNewSnapshotsUnweighted: "New snapshots weighted != new snapshots added to DB";
+
+        } catch (AssertionError|SQLException e) {
+            e.printStackTrace();
+            System.out.println(e);
         }
     }
 }
