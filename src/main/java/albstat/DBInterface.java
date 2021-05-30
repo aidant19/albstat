@@ -84,7 +84,8 @@ public class DBInterface {
         // retrieves the current highest match_player_id (the latest)
         try {
             final Statement stmt = con.createStatement();
-            final ResultSet rs = stmt.executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
+            final ResultSet rs = stmt
+                    .executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
             if (rs.next()) {
                 return rs.getInt(1) + 1;
             } else {
@@ -103,20 +104,17 @@ public class DBInterface {
             final Statement stmt = con.createStatement();
             stmt.executeUpdate(String.format(
                     "INSERT INTO `match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
-                    match
-                )
-            );
+                    match));
             for (int i = 0; i < 10; i++) {
                 addMatchPlayer((Player) match.getSubMap(i));
             }
             for (int i = 10; i < match.subMaps.size(); i++) {
                 addSnapshot((Snapshot) match.getSubMap(i));
             }
-            commit();
 
             // Calculate weights for new snapshots.
             weighSnapshots();
-
+            commit();
         } catch (final SQLException e) {
             e.printStackTrace();
             System.out.println(e);
@@ -175,25 +173,24 @@ public class DBInterface {
         return unnamedIDs;
     }
 
-    public void addPlayer(final String playerID, final String playerName){
+    public void addPlayer(final String playerID, final String playerName) {
         try {
-        final Statement stmt = con.createStatement();
-        stmt.executeUpdate(
-                String.format("INSERT INTO `player` (`player_id`, `player_name`) VALUES ('%s','%s')", playerID, playerName));
-        commit();
+            final Statement stmt = con.createStatement();
+            stmt.executeUpdate(String.format("INSERT INTO `player` (`player_id`, `player_name`) VALUES ('%s','%s')",
+                    playerID, playerName));
+            commit();
         } catch (final SQLException e) {
             e.printStackTrace();
             System.exit(0);
         }
     }
 
-    public ArrayList<String> getUniqueEvents(){
+    public ArrayList<String> getUniqueEvents() {
         // originally created for updating truncated timestamps
         ArrayList<String> eventIDs = new ArrayList<>();
         try {
             Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT event_id FROM snapshot GROUP BY event_id");
+            ResultSet rs = stmt.executeQuery("SELECT event_id FROM snapshot GROUP BY event_id");
             while (rs.next()) {
                 eventIDs.add(rs.getString(1));
             }
@@ -204,40 +201,42 @@ public class DBInterface {
         return eventIDs;
     }
 
-    public void updateSnapshotTime(String eventID, String timestamp){
+    public void updateSnapshotTime(String eventID, String timestamp) {
         // for updating snapshot timestamps
         // originally created for updating truncated timestamps
         try {
             Statement stmt = con.createStatement();
             stmt.executeUpdate(
-                String.format("UPDATE snapshot SET timestamp = '%s' WHERE event_id = '%s'", timestamp, eventID));
+                    String.format("UPDATE snapshot SET timestamp = '%s' WHERE event_id = '%s'", timestamp, eventID));
             commit();
         } catch (SQLException e) {
             e.printStackTrace();
             System.exit(0);
         }
     }
-    
+
     public void weighSnapshots() {
         // Calculates weights for new snapshots in the DB.
         try {
             Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(`snapshot_id`) FROM `snapshot` WHERE `weight` IS null"
-            );
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(`snapshot_id`) FROM `snapshot` WHERE `weight` IS null");
             // Count number of new snapshots that are unweighted.
-            int numNewSnapshotsUnweighted = rs.getInt(1);
+            if (rs.next()) {
+                int numNewSnapshotsUnweighted = rs.getInt(1);
 
-            // Calculate and add weights to snapshot table.
-            rs = stmt.executeQuery(
-                    "CALL albstat.group_fullbuild();"
-            );
-            int numNewSnapshotsWeighted = rs.getInt(1);
+                // Calculate and add weights to snapshot table.
+                rs = stmt.executeQuery("CALL albstat.group_fullbuild();");
+                if (rs.next()) {
+                    int numNewSnapshotsWeighted = rs.getInt(1);
 
-            // Verify that number of new snapshots weighted == number of new snapshots added to DB.
-            assert numNewSnapshotsWeighted == numNewSnapshotsUnweighted: "New snapshots weighted != new snapshots added to DB";
+                    // Verify that number of new snapshots weighted == number of new snapshots added
+                    // to DB.
+                    assert numNewSnapshotsWeighted == numNewSnapshotsUnweighted
+                            : "New snapshots weighted != new snapshots added to DB";
+                }
+            }
 
-        } catch (AssertionError|SQLException e) {
+        } catch (AssertionError | SQLException e) {
             e.printStackTrace();
             System.out.println(e);
         }

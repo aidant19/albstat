@@ -9,18 +9,10 @@ import java.io.*;
 
 public class APIInterface {
 
-    public int matchesToParse;
-    public int matchesParsed;
-    public int duplicates;
-    public String lastReport;
+    public static final String CL20Type = "CrystalLeague20v20";
+    public static final String CL5Type = "CrystalLeague";
 
-    public APIInterface() {
-        this.matchesParsed = 0;
-        this.matchesToParse = 0;
-        this.duplicates = 0;
-    }
-
-    public String getHTML(String urlToRead) {
+    public static String getHTML(String urlToRead) {
         try {
             StringBuilder result = new StringBuilder();
             URL url = new URL(urlToRead);
@@ -34,56 +26,25 @@ public class APIInterface {
             rd.close();
             return result.toString();
         } catch (Exception e) {
-            reportStatus("API Failure", true, false);
             return getHTML(urlToRead);
         }
     }
 
-    public String getNewMatches(int offset, int limit) {
+    public static String getNewMatches(int offset, int limit, String matchType) {
         String URL = String.format(
-                "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d", limit,
-                offset);
+                "https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague?limit=%d&offset=%d&matchType=%s", limit,
+                offset, matchType);
         return getHTML(URL);
     }
 
-    public String getEventHistory(String player1, String player2) {
+    public static String getEventHistory(String player1, String player2) {
         String URL = String.format("https://gameinfo.albiononline.com/api/gameinfo/events/%s/history/%s", player1,
                 player2);
         return getHTML(URL);
     }
 
-    public String getPlayer(String playerID) {
+    public static String getPlayer(String playerID) {
         String URL = String.format("https://gameinfo.albiononline.com/api/gameinfo/players/%s", playerID);
         return getHTML(URL);
-    }
-
-    public void reportStatus(String status, boolean error, boolean last) {
-        String newReport;
-        if (lastReport == null) {
-            newReport = status;
-        } else if (error && lastReport.contains(status)) {
-            if (lastReport.contains(": ")) {
-                int statusCount = Integer.parseInt(lastReport.split(": ")[1]);
-                newReport = String.format("%s: %d", status, statusCount + 1);
-            } else {
-                newReport = String.format("%s: 2", status);
-            }
-        } else if (!error) {
-            if (lastReport.contains(status.split(":")[0])) {
-                newReport = status;
-            } else {
-                System.out.println(lastReport);
-                newReport = status;
-            }
-        } else {
-            System.out.println(lastReport);
-            newReport = status;
-        }
-        if (last) {
-            System.out.println(newReport);
-        } else {
-            System.out.print(newReport + "\r");
-        }
-        lastReport = newReport;
     }
 }
