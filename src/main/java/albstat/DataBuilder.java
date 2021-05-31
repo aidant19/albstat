@@ -3,7 +3,6 @@ package albstat;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 // aidan tokarski
 // 6/14/20
@@ -27,100 +26,145 @@ public class DataBuilder {
         this.duplicates = 0;
     }
 
-    public void getNewMatches(int offset, String matchType) {
+    public String getMatchListJSON(int limit, int offset, String matchType) {
         // primary data retrieval method
-        if (offset > 999) {
-            // the api only allows for requests of the last 1,000 matches
-            System.out.println("offset cannot be greater than 999");
+        // returns JSON retrieved from albion api of recent matches
+        if (limit > 1000) {
+            // the api only allows for requests in batches of 1,000 matches
+            System.out.println("limit (batch size) cannot be greater than 1000");
+            System.exit(0);
+        } else if (limit + offset > 10000) {
+            // api requests cannot go back further than 10,000 matches
+            System.out.println("limit (batch size) + offset cannot be greater than 10000");
             System.exit(0);
         } else {
-            int counter = 0;
-            System.out.println("retrieving parsed match ids");
-            ArrayList<String> parsedMatchIDs = dbInterface.getParsedMatchIDs();
-            System.out.printf("%d entries found\n", parsedMatchIDs.size());
-            System.out.printf("requesting %d matches\n", offset);
-            String matchJSON = APIInterface.getNewMatches(0, offset, matchType);
-            JSONHandler jsonHandler = new JSONHandler();
-            System.out.println("finding earliest unparsed match...");
-            if (jsonHandler.loadArrayReverse(matchJSON)) {
-                do {
-                    reportStatus(String.format("matches parsed: %d", counter), false, false);
-                    if (initVerify(jsonHandler)) {
-                        Match match = new Match();
-                        jsonHandler.mapTo(match);
-                        if (!(parsedMatchIDs.contains(match.get("matchID")))) {
-                            // adding the new match id to prevent api changes from
-                            // causing requests to overlap
-                            parsedMatchIDs.add(match.get("matchID"));
-                            synchronized (dbInterface) {
-                                if (match.get("level").compareTo("1") == 0) {
-                                    addLevel1MatchToDB(match);
-                                } else {
-                                    new MatchRequest(match).run();
-                                }
-                            }
-                        }
-                    }
-                    counter++;
-                } while (jsonHandler.loadPreviousObject());
-            }
+            System.out.printf("requesting %d matches, beginning at %d\n", limit, offset);
         }
-        reportStatus(String.format("matches parsed: %d", offset), false, true);
+        return APIInterface.getNewMatches(limit, offset, matchType);
     }
 
-    public class MatchRequest implements Runnable {
-
-        private Match match;
-
-        public MatchRequest(Match match) {
-            this.match = match;
-        }
-
-        public void run() {
-            getEvents(match);
-            if (DataVerifier.verify(match)) {
-                addMatchToDB(match);
-            }
-        }
+    public ArrayList<String> getStoredMatchIDs() {
+        // returns previously parsed match ids in database
+        System.out.println("retrieving stored match ids");
+        ArrayList<String> storedMatchIDs = dbInterface.getParsedMatchIDs();
+        System.out.printf("%d stored entried retrieved\n", storedMatchIDs.size());
+        return storedMatchIDs;
     }
 
-    public boolean initVerify(JSONHandler jsonHandler) {
-        // verifies that a match has 5 players on each team
+    public boolean playerCountCheck(JSONHandler jsonHandler) {
+        // verifies that the loaded match has the correct amount of players on each team
+
+        // get team 1 player ids
         jsonHandler.loadSubObject("team1Results");
         Set<String> team1Players = jsonHandler.getKeySet();
+
+        // reload match object
         jsonHandler.loadBaseObject();
+
+        // get team 2 player ids
         jsonHandler.loadSubObject("team2Results");
         Set<String> team2Players = jsonHandler.getKeySet();
+
+        // reload match object
         jsonHandler.loadBaseObject();
-        if (DataVerifier.verifyPlayers(team1Players, team2Players)) {
+
+        // verifies that both teams contain 5 players
+        boolean matchCheck = true;
+        if (team1Players.size() != 5) {
+            matchCheck = false;
+        } else if (team2Players.size() != 5) {
+            matchCheck = false;
+        }
+
+        // if match passes the check, proceed, else return an error
+        if (matchCheck) {
             return true;
         } else {
             System.out.printf("player count discrepancy @ match %s\n", jsonHandler.getValue("MatchId"));
-            System.out.printf("review at: https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague/%s",
+            System.out.printf("review at: https://gameinfo.albiononline.com/api/gameinfo/matches/crystalleague/%s\n",
                     jsonHandler.getValue("MatchId"));
             return false;
         }
     }
 
+    public ArrayList<Match> findMatchesToParse(String matchListJSON) {
+        // method for parsing the returned match list from the api
+        ArrayList<Match> matchList = new ArrayList<>();
+
+        // get previously parsed match ids to skip
+        ArrayList<String> storedMatchIDs = getStoredMatchIDs();
+
+        // initialize jsonHandler which reads data retrieved from api
+        JSONHandler jsonHandler = new JSONHandler();
+
+        // begin data processing
+        System.out.println("finding earliest unparsed match...");
+
+        // matches loaded in reverse order (oldest-latest)
+        if (jsonHandler.loadArrayReverse(matchListJSON)) {
+            do {
+                // performs a player count check
+                if (playerCountCheck(jsonHandler)) {
+                    // initialize match object and map values
+                    Match match = new Match();
+                    jsonHandler.mapTo(match);
+                    // check if the match has already been parsed
+                    if (!(storedMatchIDs.contains(match.get("matchID")))) {
+                        // level 1 matches are just added immediately (they have no kills/deaths)
+                        if (match.get("level").equals("1")) {
+                            addLevel1MatchToDB(match);
+                        } else {
+                            // add the non-level1 matches to the list of matches to parse
+                            matchList.add(match);
+                        }
+                    }
+                }
+            } while (jsonHandler.loadPreviousObject());
+        }
+        return matchList;
+    }
+
+    public void retrieveEventData(ArrayList<Match> matchList) {
+        // retrieves events for matches (kills/deaths)
+        // inputted matches should already have associated match data from the api
+        // this method simply retrieves all of the events it can find for the match
+        // this method also builds all of the snapshots from those events
+        int parseCount = 0;
+        int parseTotal = matchList.size();
+        for (Match match : matchList) {
+            reportStatus(String.format("matches parsed: %d/%d", parseCount, parseTotal), false, false);
+            getEvents(match);
+            parseCount++;
+        }
+        reportStatus(String.format("matches parsed: %d", parseCount, parseTotal), false, true);
+    }
+
     public void getEvents(Match match) {
         // retrieves the event history for all player combinations then finds events
         // which occurred in the timeframe of the match
+        ArrayList<CompletableFuture<String>> eventJSONList = new ArrayList<>();
         JSONHandler eventHandler = new JSONHandler();
-        ArrayList<CompletableFuture<String>> eventQueries = new ArrayList<>();
+        int requestedCount = 0;
+        int receivedCount = 0;
+
         for (int i = 0; i < 5; i++) {
             for (int j = 5; j < 10; j++) {
                 String player1ID = match.getSubMap(i).get("playerID");
                 String player2ID = match.getSubMap(j).get("playerID");
-                // create new event request
-                CompletableFuture<String> eventQuery = CompletableFuture
-                        .supplyAsync(new EventRequest(player1ID, player2ID));
-                // add event query to list of queries
-                eventQueries.add(eventQuery);
+                eventJSONList.add(CompletableFuture.supplyAsync(new APIInterface.EventRequest(player1ID, player2ID)));
+                requestedCount++;
+                reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false,
+                        false);
             }
         }
-        try {
-            for (CompletableFuture<String> eventQuery : eventQueries) {
-                if (eventHandler.loadArray(eventQuery.get())) {
+
+        for (CompletableFuture<String> eventJSONResponse : eventJSONList) {
+            try {
+                String eventJSON = eventJSONResponse.get();
+                receivedCount++;
+                reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false,
+                        false);
+                if (eventHandler.loadArray(eventJSON)) {
                     do {
                         if (new Timestamp(eventHandler.getValue("TimeStamp")).isBetween(match.get("timeStart"),
                                 match.get("timeEnd"))) {
@@ -128,26 +172,11 @@ public class DataBuilder {
                         }
                     } while (eventHandler.loadNextObject());
                 }
+            } catch (Exception e) {
+                System.out.println(e);
             }
-        } catch (Exception e) {
-            System.out.println(e);
-            System.exit(1);
         }
-    }
-
-    public class EventRequest implements Supplier<String> {
-
-        private String player1ID;
-        private String player2ID;
-
-        public EventRequest(String player1ID, String player2ID) {
-            this.player1ID = player1ID;
-            this.player2ID = player2ID;
-        }
-
-        public String get() {
-            return APIInterface.getEventHistory(player1ID, player2ID);
-        }
+        reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false, false);
     }
 
     public void getSnapshots(Match match, JSONHandler eventHandler) {
@@ -175,9 +204,38 @@ public class DataBuilder {
         }
     }
 
+    public boolean verifyKillsDeaths(Match match) {
+        String[] playerIDs = new String[10];
+        int[] killsReported = new int[10];
+        int[] killsFound = new int[10];
+        // retrieves match reported kills
+        for (int i = 0; i < 10; i++) {
+            killsReported[i] = ((Player) match.getSubMap(i)).kills;
+            playerIDs[i] = match.getSubMap(i).get("playerID");
+        }
+        // retrieves kills found in snapshots
+        for (int i = 10; i < match.subMaps.size(); i++) {
+            if (Integer.parseInt(match.getSubMap(i).get("snapshotType")) == 1) {
+                for (int j = 0; j < 10; j++) {
+                    if (((Snapshot) match.getSubMap(i)).playerID.compareTo(playerIDs[j]) == 0) {
+                        killsFound[j]++;
+                    }
+                }
+            }
+        }
+        // verifies that the reported and found kills are the same
+        for (int i = 0; i < 10; i++) {
+            if (killsReported[i] != killsFound[i]) {
+                System.out.printf("kill discrepancy @ match: %s\n", match.get("matchID"));
+                System.out.printf("player: %s reported: %d found %d\n", playerIDs[i], killsReported[i], killsFound[i]);
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void addMatchToDB(Match match) {
-        // int nextID = dbInterface.getNextMatchPlayerID();
-        int nextID = 0;
+        int nextID = dbInterface.getNextMatchPlayerID();
         // sub maps 0-9 reserved for players
         // sub maps 10+ reserved for snapshots
         for (int i = 0; i < 10; i++) {
@@ -239,8 +297,18 @@ public class DataBuilder {
     public static void main(String[] args) throws Exception {
         DataBuilder builder = new DataBuilder();
         // offset, batchSize, total
-        String matchType = APIInterface.CL20Type;
-        builder.getNewMatches(999, matchType);
+        String matchType = APIInterface.CL5Type;
+        String matchListJSON = builder.getMatchListJSON(1000, 0, matchType);
+        ArrayList<Match> matchList = builder.findMatchesToParse(matchListJSON);
+        ArrayList<Match> errorList = new ArrayList<>();
+        builder.retrieveEventData(matchList);
+        for (int i = 0; i < matchList.size(); i++) {
+            if (!builder.verifyKillsDeaths(matchList.get(i))) {
+                errorList.add(matchList.remove(i));
+            } else {
+                builder.addMatchToDB(matchList.get(i));
+            }
+        }
         // builder.getPlayerNames(new JSONHandler());
     }
 }
