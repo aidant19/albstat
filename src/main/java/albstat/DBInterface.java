@@ -35,9 +35,10 @@ public class DBInterface {
         final DBCredentials credentials = new DBCredentials();
         Connection con;
         try {
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/albstat", credentials.getUser(),
+            con = DriverManager.getConnection("jdbc:postgresql://25.1.197.128:5432/albion", credentials.getUser(),
                     credentials.getPass());
             con.setAutoCommit(false);
+            con.setSchema("albstat");
             System.out.println("database connection established");
             return con;
         } catch (final SQLException e) {
@@ -72,14 +73,16 @@ public class DBInterface {
         final ArrayList<String> matchIDs = new ArrayList<String>();
         try {
             final Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT `match_id` FROM `match`");
+            ResultSet rs = stmt.executeQuery("SELECT id FROM match");
             while (rs.next()) {
                 matchIDs.add(rs.getString(1));
             }
+            /*
             rs = stmt.executeQuery("SELECT `match_id` FROM `match1`");
             while (rs.next()) {
                 matchIDs.add(rs.getString(1));
             }
+            */
         } catch (final SQLException e) {
             System.out.println("error retrieving parsed matches");
             System.out.println(e);
@@ -88,11 +91,11 @@ public class DBInterface {
     }
 
     public int getNextMatchPlayerID() {
-        // retrieves the current highest match_player_id (the latest)
+        // retrieves the current highest id (the latest)
         try {
             final Statement stmt = con.createStatement();
             final ResultSet rs = stmt
-                    .executeQuery("SELECT * FROM `match_player` ORDER BY `match_player_id` DESC LIMIT 1");
+                    .executeQuery("SELECT * FROM match_player ORDER BY id DESC LIMIT 1");
             if (rs.next()) {
                 return rs.getInt(1) + 1;
             } else {
@@ -108,9 +111,11 @@ public class DBInterface {
     public void addMatch(final Match match) {
         // adds a new match to the db
         try {
+            // convert winner to boolean
+            match.put("winner", String.valueOf(Integer.valueOf(match.get("winner")) - 1));
             final Statement stmt = con.createStatement();
             stmt.executeUpdate(String.format(
-                    "INSERT INTO `match` (`match_id`, `match_level`, `match_winner`, `match_time_start`, `match_time_end`) VALUES %s",
+                    "INSERT INTO match (id, level, winner, time_start, time_end) VALUES %s",
                     match));
             for (int i = 0; i < 10; i++) {
                 addMatchPlayer((Player) match.getSubMap(i));
@@ -120,7 +125,7 @@ public class DBInterface {
             }
 
             // Calculate weights for new snapshots.
-            weighSnapshots();
+            // weighSnapshots();
             commit();
         } catch (final SQLException e) {
             e.printStackTrace();
@@ -129,15 +134,17 @@ public class DBInterface {
     }
 
     public void addMatchPlayer(final Player player) throws SQLException {
+        // convert team to boolean
+        player.values[2] = String.valueOf(Integer.valueOf(player.get("team")) - 1);
         final Statement stmt = con.createStatement();
         stmt.executeUpdate(
-                String.format("INSERT INTO `match_player` (`player_id`, `match_id`, `team`) VALUES %s", player));
+                String.format("INSERT INTO match_player (player_id, match_id, team) VALUES %s", player));
     }
 
     public void addSnapshot(final Snapshot snapshot) throws SQLException {
         final Statement stmt = con.createStatement();
         stmt.executeUpdate(String.format(
-                "INSERT INTO `snapshot` (`match_player_id`, `snapshot_type`, `event_id`, `timestamp`, `mainhand_type`, `mainhand_enchant`, `mainhand_tier`, `offhand_type`, `offhand_enchant`, `offhand_tier`, `head_type`, `head_enchant`, `head_tier`, `armor_type`, `armor_enchant`, `armor_tier`, `shoe_type`, `shoe_enchant`, `shoe_tier`, `cape_type`, `cape_enchant`, `cape_tier`) VALUES %s",
+                "INSERT INTO kill_event (type, event_id, match_player_id, timestamp, mainhand_type, mainhand_enchant, mainhand_tier, offhand_type, offhand_enchant, offhand_tier, head_type, head_enchant, head_tier, chest_type, chest_enchant, chest_tier, shoe_type, shoe_enchant, shoe_tier, cape_type, cape_enchant, cape_tier) VALUES %s",
                 snapshot));
     }
 
@@ -183,7 +190,7 @@ public class DBInterface {
     public void addPlayer(final String playerID, final String playerName) {
         try {
             final Statement stmt = con.createStatement();
-            stmt.executeUpdate(String.format("INSERT INTO `player` (`player_id`, `player_name`) VALUES ('%s','%s')",
+            stmt.executeUpdate(String.format("INSERT INTO player (player_id, player_name) VALUES ('%s','%s')",
                     playerID, playerName));
             commit();
         } catch (final SQLException e) {

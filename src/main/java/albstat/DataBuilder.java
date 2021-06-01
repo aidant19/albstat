@@ -47,7 +47,7 @@ public class DataBuilder {
         // returns previously parsed match ids in database
         System.out.println("retrieving stored match ids");
         ArrayList<String> storedMatchIDs = dbInterface.getParsedMatchIDs();
-        System.out.printf("%d stored entried retrieved\n", storedMatchIDs.size());
+        System.out.printf("%d stored entries retrieved\n", storedMatchIDs.size());
         return storedMatchIDs;
     }
 
@@ -112,7 +112,7 @@ public class DataBuilder {
                     if (!(storedMatchIDs.contains(match.get("matchID")))) {
                         // level 1 matches are just added immediately (they have no kills/deaths)
                         if (match.get("level").equals("1")) {
-                            addLevel1MatchToDB(match);
+                            // addLevel1MatchToDB(match);
                         } else {
                             // add the non-level1 matches to the list of matches to parse
                             matchList.add(match);
@@ -298,7 +298,7 @@ public class DataBuilder {
         DataBuilder builder = new DataBuilder();
         // offset, batchSize, total
         String matchType = APIInterface.CL5Type;
-        String matchListJSON = builder.getMatchListJSON(1000, 0, matchType);
+        String matchListJSON = builder.getMatchListJSON(1000, 9000, matchType);
         ArrayList<Match> matchList = builder.findMatchesToParse(matchListJSON);
         ArrayList<Match> errorList = new ArrayList<>();
         builder.retrieveEventData(matchList);
@@ -309,6 +309,6 @@ public class DataBuilder {
                 builder.addMatchToDB(matchList.get(i));
             }
         }
-        // builder.getPlayerNames(new JSONHandler());
+        //builder.getPlayerNames(new JSONHandler());
     }
 }

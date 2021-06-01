@@ -37,7 +37,7 @@ public class Snapshot extends JSONDefinedMap {
         if (key.contains("TypeFull")) {
             addItem(key.split(" ")[0], newValue);
         } else if (playerID.compareTo(key) == 0) {
-            values[0] = newValue;
+            values[2] = newValue;
         } else if ("playerID".compareTo(key) == 0) {
             playerID = newValue;
         } else {
@@ -74,10 +74,10 @@ public class Snapshot extends JSONDefinedMap {
     }
 
     protected void setKeys() {
-        keys[0] = "MatchPlayerID";
-        keys[1] = "snapshotType";
-        values[1] = String.valueOf(snapshotType);
-        keys[2] = "eventID";
+        keys[0] = "snapshotType";
+        values[0] = String.valueOf(snapshotType);
+        keys[1] = "eventID";
+        keys[2] = "MatchPlayerID";
         keys[3] = "timestamp";
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 3; j++) {
@@ -89,7 +89,7 @@ public class Snapshot extends JSONDefinedMap {
     protected void setMapping() {
         // maps fields from the api (JSON) to keys or fields in the map
         this.jsonMap = new JSONMap(9);
-        jsonMap.add(new String[] { "EventId" }, keys[2]);
+        jsonMap.add(new String[] { "EventId" }, keys[1]);
         jsonMap.add(new String[] { "TimeStamp" }, keys[3]);
         String[] playerAddress;
         switch (snapshotType) {
