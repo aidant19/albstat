@@ -13,6 +13,8 @@ package albstat;
 import java.sql.*;
 import java.util.ArrayList;
 
+import org.postgresql.util.PSQLException;
+
 // credential reading
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -62,6 +64,7 @@ public class DBInterface {
 
     public void rollback() throws SQLException {
         con.rollback();
+        con.setSchema("albstat");
     }
 
     public void commit() throws SQLException {
@@ -78,11 +81,9 @@ public class DBInterface {
                 matchIDs.add(rs.getString(1));
             }
             /*
-            rs = stmt.executeQuery("SELECT `match_id` FROM `match1`");
-            while (rs.next()) {
-                matchIDs.add(rs.getString(1));
-            }
-            */
+             * rs = stmt.executeQuery("SELECT `match_id` FROM `match1`"); while (rs.next())
+             * { matchIDs.add(rs.getString(1)); }
+             */
         } catch (final SQLException e) {
             System.out.println("error retrieving parsed matches");
             System.out.println(e);
@@ -94,8 +95,7 @@ public class DBInterface {
         // retrieves the current highest id (the latest)
         try {
             final Statement stmt = con.createStatement();
-            final ResultSet rs = stmt
-                    .executeQuery("SELECT * FROM match_player ORDER BY id DESC LIMIT 1");
+            final ResultSet rs = stmt.executeQuery("SELECT * FROM match_player ORDER BY id DESC LIMIT 1");
             if (rs.next()) {
                 return rs.getInt(1) + 1;
             } else {
@@ -114,9 +114,8 @@ public class DBInterface {
             // convert winner to boolean
             match.put("winner", String.valueOf(Integer.valueOf(match.get("winner")) - 1));
             final Statement stmt = con.createStatement();
-            stmt.executeUpdate(String.format(
-                    "INSERT INTO match (id, level, winner, time_start, time_end) VALUES %s",
-                    match));
+            stmt.executeUpdate(
+                    String.format("INSERT INTO match (id, level, winner, time_start, time_end) VALUES %s", match));
             for (int i = 0; i < 10; i++) {
                 addMatchPlayer((Player) match.getSubMap(i));
             }
@@ -127,21 +126,25 @@ public class DBInterface {
             // Calculate weights for new snapshots.
             // weighSnapshots();
             commit();
-        } catch (final SQLException e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             System.out.println(e);
+            try {
+                rollback();
+            } catch (Exception e2) {
+                System.exit(1);
+            }
         }
     }
 
-    public void addMatchPlayer(final Player player) throws SQLException {
+    public void addMatchPlayer(final Player player) throws SQLException, PSQLException {
         // convert team to boolean
         player.values[2] = String.valueOf(Integer.valueOf(player.get("team")) - 1);
         final Statement stmt = con.createStatement();
-        stmt.executeUpdate(
-                String.format("INSERT INTO match_player (player_id, match_id, team) VALUES %s", player));
+        stmt.executeUpdate(String.format("INSERT INTO match_player (player_id, match_id, team) VALUES %s", player));
     }
 
-    public void addSnapshot(final Snapshot snapshot) throws SQLException {
+    public void addSnapshot(final Snapshot snapshot) throws SQLException, PSQLException {
         final Statement stmt = con.createStatement();
         stmt.executeUpdate(String.format(
                 "INSERT INTO kill_event (type, event_id, match_player_id, timestamp, mainhand_type, mainhand_enchant, mainhand_tier, offhand_type, offhand_enchant, offhand_tier, head_type, head_enchant, head_tier, chest_type, chest_enchant, chest_tier, shoe_type, shoe_enchant, shoe_tier, cape_type, cape_enchant, cape_tier) VALUES %s",
@@ -190,8 +193,8 @@ public class DBInterface {
     public void addPlayer(final String playerID, final String playerName) {
         try {
             final Statement stmt = con.createStatement();
-            stmt.executeUpdate(String.format("INSERT INTO player (player_id, player_name) VALUES ('%s','%s')",
-                    playerID, playerName));
+            stmt.executeUpdate(String.format("INSERT INTO player (player_id, player_name) VALUES ('%s','%s')", playerID,
+                    playerName));
             commit();
         } catch (final SQLException e) {
             e.printStackTrace();
@@ -260,13 +263,14 @@ public class DBInterface {
 
         private String user;
         private String pass;
-    
-        public DBCredentials(){
-            // this constructor assumes you have placed a cred.txt file in the proper location
+
+        public DBCredentials() {
+            // this constructor assumes you have placed a cred.txt file in the proper
+            // location
             readCred();
         }
-    
-        private void readCred(){
+
+        private void readCred() {
             try {
                 FileReader fileReader = new FileReader("cred.txt");
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -279,12 +283,12 @@ public class DBInterface {
                 System.out.println("error reading credentials");
             }
         }
-    
-        public String getUser(){
+
+        public String getUser() {
             return this.user;
         }
-    
-        public String getPass(){
+
+        public String getPass() {
             return this.pass;
         }
     }

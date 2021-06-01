@@ -124,21 +124,6 @@ public class DataBuilder {
         return matchList;
     }
 
-    public void retrieveEventData(ArrayList<Match> matchList) {
-        // retrieves events for matches (kills/deaths)
-        // inputted matches should already have associated match data from the api
-        // this method simply retrieves all of the events it can find for the match
-        // this method also builds all of the snapshots from those events
-        int parseCount = 0;
-        int parseTotal = matchList.size();
-        for (Match match : matchList) {
-            reportStatus(String.format("matches parsed: %d/%d", parseCount, parseTotal), false, false);
-            getEvents(match);
-            parseCount++;
-        }
-        reportStatus(String.format("matches parsed: %d", parseCount, parseTotal), false, true);
-    }
-
     public void getEvents(Match match) {
         // retrieves the event history for all player combinations then finds events
         // which occurred in the timeframe of the match
@@ -295,20 +280,27 @@ public class DataBuilder {
     }
 
     public static void main(String[] args) throws Exception {
-        DataBuilder builder = new DataBuilder();
-        // offset, batchSize, total
-        String matchType = APIInterface.CL5Type;
-        String matchListJSON = builder.getMatchListJSON(1000, 9000, matchType);
-        ArrayList<Match> matchList = builder.findMatchesToParse(matchListJSON);
-        ArrayList<Match> errorList = new ArrayList<>();
-        builder.retrieveEventData(matchList);
-        for (int i = 0; i < matchList.size(); i++) {
-            if (!builder.verifyKillsDeaths(matchList.get(i))) {
-                errorList.add(matchList.remove(i));
-            } else {
-                builder.addMatchToDB(matchList.get(i));
+        for (int batch = 0; batch < 10; batch++) {
+            DataBuilder builder = new DataBuilder();
+            // offset, batchSize, total
+            String matchType = APIInterface.CL5Type;
+            String matchListJSON = builder.getMatchListJSON(1000, 9000-batch, matchType);
+            ArrayList<Match> matchList = builder.findMatchesToParse(matchListJSON);
+            ArrayList<Match> errorList = new ArrayList<>();
+            int parseCount = 0;
+            int parseTotal = matchList.size();
+            for (int i = 0; i < matchList.size(); i++) {
+                builder.reportStatus(String.format("matches parsed: %d/%d", parseCount, parseTotal), false, false);
+                builder.getEvents(matchList.get(i));
+                parseCount++;
+                if (!builder.verifyKillsDeaths(matchList.get(i))) {
+                    errorList.add(matchList.remove(i));
+                } else {
+                    builder.addMatchToDB(matchList.get(i));
+                }
             }
+            builder.reportStatus(String.format("matches parsed: %d", parseCount, parseTotal), false, true);
         }
-        //builder.getPlayerNames(new JSONHandler());
+        // builder.getPlayerNames(new JSONHandler());
     }
 }
