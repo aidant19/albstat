@@ -14,16 +14,14 @@ public class DataBuilder {
     private DBInterface dbInterface;
 
     // fields
-    public int matchesToParse;
-    public int matchesParsed;
-    public int duplicates;
+    public int level1Count;
+    public int duplicateCount;
     public String lastReport;
 
     public DataBuilder() {
         this.dbInterface = new DBInterface();
-        this.matchesParsed = 0;
-        this.matchesToParse = 0;
-        this.duplicates = 0;
+        this.level1Count = 0;
+        this.duplicateCount = 0;
     }
 
     public String getMatchListJSON(int limit, int offset, String matchType) {
@@ -112,11 +110,14 @@ public class DataBuilder {
                     if (!(storedMatchIDs.contains(match.get("matchID")))) {
                         // level 1 matches are just added immediately (they have no kills/deaths)
                         if (match.get("level").equals("1")) {
+                            level1Count++;
                             // addLevel1MatchToDB(match);
                         } else {
                             // add the non-level1 matches to the list of matches to parse
                             matchList.add(match);
                         }
+                    } else {
+                        duplicateCount++;
                     }
                 }
             } while (jsonHandler.loadPreviousObject());
@@ -129,26 +130,19 @@ public class DataBuilder {
         // which occurred in the timeframe of the match
         ArrayList<CompletableFuture<String>> eventJSONList = new ArrayList<>();
         JSONHandler eventHandler = new JSONHandler();
-        int requestedCount = 0;
-        int receivedCount = 0;
+
 
         for (int i = 0; i < 5; i++) {
             for (int j = 5; j < 10; j++) {
                 String player1ID = match.getSubMap(i).get("playerID");
                 String player2ID = match.getSubMap(j).get("playerID");
                 eventJSONList.add(CompletableFuture.supplyAsync(new APIInterface.EventRequest(player1ID, player2ID)));
-                requestedCount++;
-                reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false,
-                        false);
             }
         }
 
         for (CompletableFuture<String> eventJSONResponse : eventJSONList) {
             try {
                 String eventJSON = eventJSONResponse.get();
-                receivedCount++;
-                reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false,
-                        false);
                 if (eventHandler.loadArray(eventJSON)) {
                     do {
                         if (new Timestamp(eventHandler.getValue("TimeStamp")).isBetween(match.get("timeStart"),
@@ -161,7 +155,6 @@ public class DataBuilder {
                 System.out.println(e);
             }
         }
-        reportStatus(String.format("events received/requested: %d/%d", receivedCount, requestedCount), false, false);
     }
 
     public void getSnapshots(Match match, JSONHandler eventHandler) {
@@ -219,7 +212,7 @@ public class DataBuilder {
         return true;
     }
 
-    public void addMatchToDB(Match match) {
+    public boolean addMatchToDB(Match match) {
         int nextID = dbInterface.getNextMatchPlayerID();
         // sub maps 0-9 reserved for players
         // sub maps 10+ reserved for snapshots
@@ -229,7 +222,7 @@ public class DataBuilder {
                 match.getSubMap(j).put(playerID, String.valueOf(nextID + i));
             }
         }
-        dbInterface.addMatch(match);
+        return dbInterface.addMatch(match); 
     }
 
     public void addLevel1MatchToDB(Match match) {
@@ -280,14 +273,15 @@ public class DataBuilder {
     }
 
     public static void main(String[] args) throws Exception {
-        for (int batch = 0; batch < 10; batch++) {
-            DataBuilder builder = new DataBuilder();
+        DataBuilder builder = new DataBuilder();
+        for (int batch = 9; batch < 10; batch++) {
             // offset, batchSize, total
             String matchType = APIInterface.CL5Type;
-            String matchListJSON = builder.getMatchListJSON(1000, 9000-batch, matchType);
+            String matchListJSON = builder.getMatchListJSON(1000, 9000-(batch*1000), matchType);
             ArrayList<Match> matchList = builder.findMatchesToParse(matchListJSON);
             ArrayList<Match> errorList = new ArrayList<>();
             int parseCount = 0;
+            int dbErrorCount = 0;
             int parseTotal = matchList.size();
             for (int i = 0; i < matchList.size(); i++) {
                 builder.reportStatus(String.format("matches parsed: %d/%d", parseCount, parseTotal), false, false);
@@ -296,11 +290,19 @@ public class DataBuilder {
                 if (!builder.verifyKillsDeaths(matchList.get(i))) {
                     errorList.add(matchList.remove(i));
                 } else {
-                    builder.addMatchToDB(matchList.get(i));
+                    if(!builder.addMatchToDB(matchList.get(i))){
+                        dbErrorCount++;
+                    }
                 }
             }
             builder.reportStatus(String.format("matches parsed: %d", parseCount, parseTotal), false, true);
+            System.out.printf("Matches already stored: %d\n", builder.duplicateCount);
+            System.out.printf("Level 1 matches parsed: %d\n", builder.level1Count);
+            System.out.printf("Level 2+ parsed: %d\n", matchList.size() - dbErrorCount);
+            System.out.printf("Kill count errors: %d\n", errorList.size());
+            System.out.printf("DB match add errors %d\n", dbErrorCount);
+            builder = new DataBuilder();
         }
-        // builder.getPlayerNames(new JSONHandler());
+        builder.getPlayerNames(new JSONHandler());
     }
 }

@@ -108,10 +108,11 @@ public class DBInterface {
         }
     }
 
-    public void addMatch(final Match match) {
+    public boolean addMatch(final Match match) {
         // adds a new match to the db
+        // convert winner to boolean
+        // returns true if successful
         try {
-            // convert winner to boolean
             match.put("winner", String.valueOf(Integer.valueOf(match.get("winner")) - 1));
             final Statement stmt = con.createStatement();
             stmt.executeUpdate(
@@ -122,10 +123,10 @@ public class DBInterface {
             for (int i = 10; i < match.subMaps.size(); i++) {
                 addSnapshot((Snapshot) match.getSubMap(i));
             }
-
             // Calculate weights for new snapshots.
             // weighSnapshots();
             commit();
+            return true;
         } catch (final Exception e) {
             e.printStackTrace();
             System.out.println(e);
@@ -134,6 +135,7 @@ public class DBInterface {
             } catch (Exception e2) {
                 System.exit(1);
             }
+            return false;
         }
     }
 
@@ -179,7 +181,7 @@ public class DBInterface {
         try {
             final Statement stmt = con.createStatement();
             final ResultSet rs = stmt.executeQuery(
-                    "SELECT player_id FROM match_player WHERE player_id NOT IN (SELECT player_id FROM player) GROUP BY player_id");
+                    "SELECT player_id FROM match_player WHERE player_id NOT IN (SELECT id FROM player) GROUP BY player_id");
             while (rs.next()) {
                 unnamedIDs.add(rs.getString(1));
             }
@@ -193,7 +195,7 @@ public class DBInterface {
     public void addPlayer(final String playerID, final String playerName) {
         try {
             final Statement stmt = con.createStatement();
-            stmt.executeUpdate(String.format("INSERT INTO player (player_id, player_name) VALUES ('%s','%s')", playerID,
+            stmt.executeUpdate(String.format("INSERT INTO player (id, name) VALUES ('%s','%s')", playerID,
                     playerName));
             commit();
         } catch (final SQLException e) {
